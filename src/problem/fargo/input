@@ -1,0 +1,47 @@
+&start_params
+	tlim    = 6238.d0
+       ,verbose = .false.
+       ,debug   = .false.
+       /
+
+&scheme_params
+	bdtypex    = 'shearingbox'
+       ,bdtypey    = 'periodic'
+       ,bdtypez    = 'periodic'
+       ,riemann    = 'hlld'
+       ,riemann2d  = 'hlld'
+       ,slope_type = 2
+       ,courant    = 0.8
+       ,fargo      = .true.
+       /
+
+&model_params
+	nx     = 32
+       ,ny     = 64       
+       ,nz     = 2
+       ,xmin   = -1.5d0
+       ,xmax   =  1.5d0
+       ,ymin   = -4.d0
+       ,ymax   =  4.d0
+       ,zmin   = -2.d0
+       ,zmax   =  2.d0
+       ,Omega0 = 1.d-3
+       ,ciso   = 1.d-3
+       /
+
+&output_params
+	dtdump  = 623.8d0
+       ,io_type = 'phdf5'
+	/
+
+&mpi_params
+	nxslice = 2
+	nyslice = 1
+	nzslice = 1
+	/
+
+&init_params
+	R  = 1.d0
+	A0 = 1.d-3
+	v0 = 1.d-3
+    	/

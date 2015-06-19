@@ -1,0 +1,9 @@
+.svn/
+*~
+*.o
+*.mod
+*.pyc
+./tmp
+Makefile
+*.log
+log.*

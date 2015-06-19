@@ -1,0 +1,562 @@
+%===============================================================================
+% DUMSES-Hybrid: manual
+% 
+% author:
+% Marc Joos <marc.joos@cea.fr>, Sebastien Fromang
+% Copyright:
+% Copyrights 2013-2015, CEA
+% This file is distributed under the CeCILL-A & GNU/GPL licenses, see
+% <http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html> and
+% <http://www.gnu.org/licenses/>
+% date:
+% created:       05-29-2015
+% last modified: 06-19-2015
+%===============================================================================
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fullpage}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{multirow}
+\usepackage[svgnames]{xcolor}
+
+%% Check if Minted is available on the machine. If not, load verbatim instead
+\IfFileExists{minted.sty}{%
+\usepackage{minted}
+}{\typeout{> Minted not available!}
+\usepackage{verbatim}
+}
+
+%% Check if LinuxLibertine is available. If not, try to load TXFonts instead
+\IfFileExists{libertine.sty}{
+  \usepackage{libertine}
+}{
+  \typeout{> Libertine not available!}
+  \IfFileExists{txfonts.sty}{
+    \usepackage[varg]{txfonts}
+  }{
+    \typeout{> TXFonts not available!}
+  }
+}
+
+%% Check if Minted was loaded
+\makeatletter
+\newif\ifmintedloaded
+\@ifpackageloaded{minted}
+    {\mintedloadedtrue}
+    {\mintedloadedfalse}
+\makeatother
+
+%% Define codeblock
+%% If Minted is loaded, use it to display code, else use verbatim environment
+\ifmintedloaded
+    \newenvironment{codeblock}[2][]{%
+    \minted[bgcolor=LightGray!80!white,fontsize=\small,#1]{#2}%
+}{%
+    \endminted%
+}%
+\else
+    \newenvironment{codeblock}[2][]{\verbatim}{\endverbatim}
+\fi
+
+%% Change section, subsection etc. layout
+\makeatletter
+\renewcommand{\section}{\@startsection {section}{1}{\z@}%
+             {-3.5ex \@plus -1ex \@minus -.2ex}%
+             {2.3ex \@plus .2ex}%
+             {\normalfont\Large\sffamily\bfseries}}
+
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+             {-3.25ex\@plus -1ex \@minus -.2ex}%
+             {1.5ex \@plus .2ex}%
+             {\normalfont\large\sffamily\bfseries}}
+
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{2}{\z@}%
+             {-3.25ex\@plus -1ex \@minus -.2ex}%
+             {1.5ex \@plus .2ex}%
+             {\normalfont\normalsize\sffamily\bfseries}}
+\makeatother
+
+\author{Marc \textsc{Joos} \& S\'ebastien \textsc{Fromang}}
+\title{\textsc{Dumses}-Hybrid \\ Manual}
+\date{ }
+
+\begin{document}    
+\vspace*{-9em}
+        {\let\newpage\relax\maketitle}
+
+\section{Configuration}
+
+\textsc{Dumses}-Hybrid comes with a Python configuration script, that will automatically generate the Makefile.
+
+Here is the list of arguments taken by \texttt{configure}:
+\begin{table}[h!]
+  \centering
+  {\footnotesize
+    \begin{tabular}{l | p{.5\textwidth} | c }
+      ~\hfill argument\hfill~ & ~\hfill definition\hfill~ & ~\hfill default \hfill~ \\
+      \hline
+      \hline
+      \texttt{-h, --help} & show help message & -- \\
+      \hline
+      \multicolumn{3}{c}{\normalsize \bfseries Compiler \& libraries} \\
+      \hline
+      \texttt{-m, --with-mpi} & to specify MPI library directory. If you see that a wrong MPI directory is chosen (typically, the one from your Python distribution), you should use \texttt{--with-mpi=0} to deactivate MPI and avoid to use a non-compatible MPI version. & automatic detection \\
+      \texttt{-H, --with-phdf5} & to specify Parallel HDF5 library directory. If no Parallel HDF5 library is found, it looks for sequential HDF5 library. If you have Parallel or sequential HDF5 installed but don't want to use it, you can use \texttt{--with-phdf5=/}. & automatic detection \\
+      \texttt{-c, --with-pnetcdf} & to specify Parallel NetCDF library directory. If you have Parallel NetCDF installed but don't want to use it, you can use \texttt{--with-pnetcdf=/}. & automatic detection \\
+      \texttt{-f, --with-fortran-compiler} & to specify which Fortran compiler to use. If not set and not on BlueGene, Fortran compiler is retrieve from \texttt{mpif90} executable. & automatic detection \\
+      \texttt{-o, --with-openacc} & to specify to compile the code for accelerators. Compatible only with PGI compiler. & not set \\
+      \texttt{-a, --auto-parallel} & to use auto-parallelization option of the compiler, if available. & not set \\
+      \hline
+      \multicolumn{3}{c}{\normalsize \bfseries Problem configuration} \\
+      \hline
+      \texttt{-p, --problem} & to specify which problem to initialize. & \texttt{magnetic\_loop} \\
+      \texttt{-n, --ndim} & to specify the number of dimensions of the problem. & \texttt{3} \\
+      \texttt{-i, --iso[thermal]} & to specify if the computation is isothermal or not. & \texttt{1} \\ (isothermal) \\
+      \texttt{-g, --geometry} & to specify the geometry of the problem (in \texttt{cartesian}, \texttt{cylindrical}, \texttt{spherical}) & \texttt{cartesian} \\
+      \hline
+      \multicolumn{3}{c}{\normalsize \bfseries Debug} \\
+      \hline
+      \texttt{-d, --debug} & to use debugging compiler options; for debug purpose only. & not set \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
+
+The script will detect automatically if you are running on a BlueGene machine.
+
+
+Finally, you can also overwrite some basic variables and flags with the following environment variables:
+
+\begin{table}[h!]
+  \centering
+  {\footnotesize
+    \begin{tabular}{l | l}
+      ~\hfill variable\hfill~ & ~\hfill definition\hfill~ \\
+      \hline
+      \hline
+      \texttt{F90} & Fortran compiler \\
+      \texttt{F90\_FLAGS} & Fortran compiler flags \\
+      \texttt{MPI\_LIB} & MPI library path \\
+      \texttt{MPI\_INC} & MPI include path \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
+
+A log file \texttt{conf.log} will be created at the end, with the full command line corresponding to your configuration.
+
+\section{Compiling \textsc{Dumses}-Hybrid}
+
+The \texttt{configure} script will produce a Makefile for your architecture, libraries and problem.
+
+Once the Makefile is ready, you have to compile the code running:
+
+\begin{codeblock}{bash}
+  ./make.py
+\end{codeblock}
+This is a Python script that will preprocess and compile the code. It will create a temporary directory \texttt{tmp/} where you will find the preprocessed files. The object files and the executable will be in \texttt{bin/} directory.
+
+Python preprocessing step cannot be avoid, as Riemann solvers are generated during this step. Note also that the time and date of the last preprocessing step is stored in \texttt{tmp/log.dat}.
+\newline
+
+Once the code was preprocessed with \textsc{Dumses} preprocessor, if you don't make any change in the source code, you can directly run the \texttt{make} command.
+
+Note also that to clean the current build, you can use either 
+
+\begin{codeblock}{bash}
+  make clean
+\end{codeblock}
+or 
+
+\begin{codeblock}{bash}
+  make shallow_clean
+\end{codeblock}
+\texttt{clean} will delete object files in \texttt{bin/}, and \texttt{tmp/} content. \texttt{shallow\_clean} will delete only files in \texttt{bin/}.
+
+\section{Run the code}
+
+You have to copy \texttt{bin/dumses} and an input file in your run directory. Depending on your compilation options, you can then either run:
+
+\begin{codeblock}{bash}
+  ./dumses
+\end{codeblock}
+or
+
+\begin{codeblock}{bash}
+  mpirun -np [nb_proc] ./dumses
+\end{codeblock}
+
+If you want to use OpenMP, don't forget to specify the number of OpenMP threads you intend to use with the environment variable \texttt{OMP\_NUM\_THREADS}. You can also chose to change the loop scheduling with \texttt{OMP\_SCHEDULE}.
+
+Also note that on most system, the number of threads is, by default, the number of available logical cores. You might want to add
+
+\begin{codeblock}{bash}
+  export OMP_NUM_THREADS=1
+\end{codeblock}
+in your \texttt{.bashrc} or \texttt{.profile} to force the number of threads at 1 by default.
+\newline
+
+If you want to use OpenACC, you can (de)activate the device with the environment variable \texttt{ACC\_DEVICE\_TYPE}. With NVIDIA cards, it has to be set to \texttt{'nvidia'}. If you have multiple devices on your machine, you have to have as many MPI processes as devices.
+
+\clearpage
+
+\section{Input parameters}
+
+The input parameters have to be given though a Fortran namelist named \texttt{input}. Here is the list of input parameters:
+
+\begin{table}[h!]
+  \centering
+  {\footnotesize
+  \begin{tabular}{l | l | p{.5\textwidth} | c }
+    ~\hfill parameter\hfill~ & ~\hfill type\hfill~ & ~\hfill definition\hfill~ & default value \\
+    \hline
+    \hline
+    \multicolumn{4}{c}{\normalsize \bfseries Start parameters} \\
+    \hline
+    \texttt{tlim} & \texttt{real} & limit time for the simulation (simulation stops when reached) & \texttt{1.d0} \\
+    \texttt{restart} & \texttt{integer} & index of the output to use to restart the simulation & \texttt{0} \\
+    \texttt{verbose} & \texttt{logical} & (de)activate verbose mode & \texttt{.false.} \\
+    \texttt{debug} & \texttt{logical} & (de)activate debug mode & \texttt{.false.} \\
+    \hline
+    \multicolumn{4}{c}{\normalsize \bfseries Scheme parameters} \\
+    \hline
+    \texttt{bdtypex} & \texttt{character} & boundary conditions in the $x$-direction (in [\texttt{'periodic'}, \texttt{'zero\_gradient'}, \texttt{'shearingbox'}]) & \texttt{'periodic'} \\
+    \texttt{bdtypey} & \texttt{character} & boundary conditions in the $y$-direction (in [\texttt{'periodic'}, \texttt{'zero\_gradient'}]) & \texttt{'periodic'} \\
+    \texttt{bdtypez} & \texttt{character} & boundary conditions in the $z$-direction (in [\texttt{'periodic'}, \texttt{'zero\_gradient'}]) & \texttt{'periodic'} \\
+    \texttt{riemann} & \texttt{character} & Riemann solver (in [\texttt{'llf'}, \texttt{'hll'}, \texttt{'hlld'}, \texttt{'iacoustic'}]) & \texttt{'hlld'} \\
+    \texttt{riemann2d} & \texttt{character} & Riemann solver (in [\texttt{'upwind'}, \texttt{'llf'}, \texttt{'hll'}, \texttt{'hlld'}, \texttt{'hllf'}, \texttt{'hlla'}]) & \texttt{'hlld'} \\
+    \texttt{slope\_type} & \texttt{integer} & slope limiter type, in $[0,1,2,3]$ & \texttt{2} \\
+    \texttt{courant} & \texttt{real} & Courant factor & \texttt{0.7d0} \\
+    \texttt{fargo} & \texttt{logical} & (de)activate FARGO algorithm & \texttt{.false.} \\
+    \hline
+    \multicolumn{4}{c}{\normalsize \bfseries Model parameters} \\
+    \hline
+
+    \texttt{nx} & \texttt{integer} & total number of cells in the $x$-direction & \texttt{256} \\
+    \texttt{ny} & \texttt{integer} & total number of cells in the $y$-direction & \texttt{256} \\
+    \texttt{nz} & \texttt{integer} & total number of cells in the $z$-direction & \texttt{256} \\
+    \texttt{xmin} & \texttt{real} & minimum $x$ coordinate & \texttt{0.d0} \\
+    \texttt{xmax} & \texttt{real} & maximum $x$ coordinate & \texttt{1.d0} \\
+    \texttt{ymin} & \texttt{real} & minimum $y$ coordinate & \texttt{-0.5d0} \\
+    \texttt{ymax} & \texttt{real} & maximum $y$ coordinate & \texttt{0.5d0} \\
+    \texttt{zmin} & \texttt{real} & minimum $z$ coordinate & \texttt{0.d0} \\
+    \texttt{zmax} & \texttt{real} & maximum $z$ coordinate & \texttt{1.d0} \\
+    \texttt{Omega0} & \texttt{real} & angular velocity & \texttt{0.d0} \\
+    \texttt{ciso} & \texttt{real} & isothermal soundspeed & \texttt{0.d0} \\
+    \texttt{gamma} & \texttt{real} & specific heats ratio & \texttt{1.001d0} \\
+    \texttt{nu} & \texttt{real} & viscosity & \texttt{0.d0} \\
+    \texttt{eta} & \texttt{real} & resistivity & \texttt{0.d0} \\
+    \texttt{rhs} & \texttt{logical} & set to \texttt{.true.} if there is a non-zero source term & \texttt{.false.} \\
+    \hline
+    \multicolumn{4}{c}{\normalsize \bfseries Output parameters} \\
+    \hline
+    \texttt{dtdump} & \texttt{real} & elapsed time between two outputs & \texttt{-1.d0} \\
+    \texttt{dthist} & \texttt{real} & elapsed time between two history & \texttt{-1.d0} \\
+    \texttt{io\_type} & \texttt{character} & output format type, in [\texttt{'binary'}, \texttt{'hdf5'}, \texttt{'phdf5'}, \texttt{'pnetcdf'}] & \texttt{'binary'} \\
+    \hline
+    \multicolumn{4}{c}{\normalsize \bfseries MPI parameters} \\
+    \hline
+    \texttt{nxslice} & \texttt{integer} & number of MPI processes in the $x$-direction & \texttt{1} \\
+    \texttt{nyslice} & \texttt{integer} & number of MPI processes in the $y$-direction & \texttt{1} \\
+    \texttt{nzslice} & \texttt{integer} & number of MPI processes in the $z$-direction & \texttt{1} \\
+    \hline
+  \end{tabular}
+  }
+\end{table}
+\clearpage
+
+\section{Visualize \textsc{Dumses} simulation}
+
+\subsection{\texttt{dumpy} installation and first step}
+
+You can install directly \texttt{dumpy} in your Python distribution with the following:
+
+\begin{codeblock}{bash}
+  cd utils/dumpy
+  python setup.py install
+\end{codeblock}
+
+You can then use \texttt{dumpy} in Python by loading:
+
+\begin{codeblock}{python}
+  import dumpy as dp
+\end{codeblock}
+
+\texttt{dumpy} classes and functions are documented; with IPython or equivalent Python shell, you can access the docstring with (for example):
+
+\begin{codeblock}{python}
+  dp.DumsesData?
+\end{codeblock}
+
+\subsection{Load your data}
+
+\texttt{dumpy} core class is \texttt{DumsesData}; with this class, you will load and manipulate your data. It can easily be used:
+
+\begin{codeblock}[]{python}
+  data = dp.DumsesData()
+  data.load(10) # to load output number 10
+\end{codeblock}
+
+Once loaded, you can access all the data and useful metadata of your simulation:
+
+\begin{codeblock}[]{python}
+  data._data     # print the list of data read by dumpy
+  data._metadata # print the list of metadata read by dumpy
+\end{codeblock}
+The data available are: \texttt{rho}, \texttt{rhou}, \texttt{E} and \texttt{B}.
+
+Then, for example:
+
+\begin{codeblock}{python}
+  dat.rho
+\end{codeblock}
+is an array containing the density.
+\newline 
+
+You can also read the data from the \texttt{history.txt} file with the \texttt{DumsesHistory} class:
+
+\begin{codeblock}{python}
+  history = dp.DumsesHistory()
+  history.load()
+\end{codeblock}
+
+If you use \textsc{Dumses}-Hybrid history output format, the variable names will be retrieve from the first line of the file. Else, it will assume that you used the same format (with \texttt{'time'}, \texttt{'dt'}, \texttt{'mass'}, \texttt{'maxwell'}, \texttt{'reynolds'}, \texttt{'max+rey'}, \texttt{'magp'}, \texttt{'meanBx'}, \texttt{'meanBy'}, \texttt{'meanBz'}, \texttt{'divB'} for 3D simulations), or you can use the \texttt{listKeys} optional argument to specify your variables:
+
+\begin{codeblock}{python}
+  history.load(listKeys=['time', 'dt', 'stress'])
+\end{codeblock}
+
+\subsection{Plot your data}
+
+\texttt{dumpy} comes with two ploting functions for the data, and two more for the history data. There are also two additional functions to plot and compare outputs or history from two different simulations.
+
+\subsubsection{Data}
+
+To plot data in 1D, you can use:
+
+\begin{codeblock}{python}
+  dp.plot1d(data, ['rho', 'Bx'], direction='y')
+\end{codeblock}
+with \texttt{data} a DumsesData object. It will display a 1D plot in the $y$-direction for the density and the $x$ component of the magnetic field. 
+
+See docstring for more informations.
+\newline
+
+To plot data in 2D, you can use:
+\begin{codeblock}{python}
+  dp.plot2d(data, ['rho', 'rhoux/rho', 'Bx*Bx'], polar=True)
+\end{codeblock}
+with \texttt{data} a DumsesData object. It will display a 2D map of the density, the $x$ component of the velocity and the square of the $x$ component of the magnetic field. As you can see, you can combine easily \texttt{DumsesData} variables to create new quantities to plot. 
+
+See docstring for more informations.
+
+\subsubsection{History}
+
+You can plot the time evolution of the variables from \texttt{history.txt} with:
+\begin{codeblock}{python}
+  history.plot('maxwell', tmin=0, tmax=62830.)
+\end{codeblock}
+it will display the Maxwell stress from 0 to 62830 (in code unit).
+
+See docstring for more informations.
+\newline
+
+You can also plot to variables at the same time, using:
+
+\begin{codeblock}{python}
+  history.plotVs('maxwell', 'reynolds', tmin=0, tmax=62830.)
+\end{codeblock}
+
+\subsubsection{Compare your simulations}
+
+Essentially for debugging purpose, you can compare two by two outputs from two different simulations, with:
+
+\begin{codeblock}{python}
+  dp.comp(42, ['rho', 'Bx'], dir1='run1/', dir2='run2/')
+\end{codeblock}
+that will compare outputs 42 from simulations contains in directories \texttt{dir1} and \texttt{dir2}.
+\newline
+
+You can do the same with the \texttt{history.txt} files:
+
+\begin{codeblock}{python}
+  dp.compHistory(['maxwell', 'reynolds', 'dt'], tmax=6283.)
+\end{codeblock}
+
+\section{Tests suite}
+
+\textsc{Dumses}-Hybrid is distributed with a tests suite that can be found in \texttt{utils/tests/}. These tests are mostly non-regression tests: you should run them to ensure that recent developments in \textsc{Dumses}-Hybrid did not break the code. Six differents tests can be launched: the 1D shock tube test, the wind tunnel test, the magnetic loop test, the Orszag-Tang test, a serie of tests for the shearing box (including a magnetorotational instability (MRI) test) and the MRI test alone. All tests (apart from the MRI test) are launched in the 3 direction in space. Tests can be launched on a single processor (default behavior), with OpenMP, with MPI, and with OpenACC.
+
+In the end of a test, plots are produced and a PDF file containing the results, with a comparison to reference tests, is also produced.
+
+To launch a test, you can simply run something like:
+
+\begin{codeblock}{bash}
+  python test.py -t shock_tube
+\end{codeblock}
+
+Here are the different arguments that you can pass to the test script:
+
+\begin{table}[h!]
+  \centering
+  {\footnotesize
+    \begin{tabular}{l | p{.5\textwidth} | c }
+      ~\hfill argument\hfill~ & ~\hfill definition\hfill~ & ~\hfill default \hfill~ \\
+      \hline
+      \hline
+      \texttt{-h, --help} & show help message & -- \\
+      \hline
+      \multicolumn{3}{c}{\normalsize \bfseries Tests} \\
+      \hline
+      \texttt{-t, --test} & Test to run, in [\texttt{shock\_tube}, \texttt{wind\_tunnel}, \texttt{magnetic\_loop}, \texttt{orszag\_tang}, \texttt{shearing}, \texttt{mri}, \texttt{all}] & \texttt{all} \\
+      \texttt{-e, --error} & print \texttt{error(current run, reference run)} & not set \\
+      \texttt{-r, --reference} & generate reference outputs & not set \\
+      \texttt{-i, --io-type} & I/O type to use, in [\texttt{binary}, \texttt{hdf5}, \texttt{phdf5}, \texttt{pnetcdf}] & \texttt{binary} \\
+      \hline
+      \multicolumn{3}{c}{\normalsize \bfseries Compiler \& libraries} \\
+      \hline
+      \texttt{-m, --with-mpi} & to specify MPI library directory. If you see that a wrong MPI directory is chosen (typically, the one from your Python distribution), you should use \texttt{--with-mpi=0} to deactivate MPI and avoid to use a non-compatible MPI version. & \texttt{None} \\
+      \texttt{-H, --with-phdf5} & to specify Parallel HDF5 library directory. If no Parallel HDF5 library is found, it looks for sequential HDF5 library. If you have Parallel or sequential HDF5 installed but don't want to use it, you can use \texttt{--with-phdf5=/}. & \texttt{/} \\
+      \texttt{-c, --with-pnetcdf} & to specify Parallel NetCDF library directory. If you have Parallel NetCDF installed but don't want to use it, you can use \texttt{--with-pnetcdf=/}. & \texttt{/} \\
+      \texttt{-f, --with-fortran-compiler} & to specify which Fortran compiler to use. & \texttt{gfortran} \\
+      \texttt{-o, --with-openacc} & to specify to compile the code for accelerators. Compatible only with PGI compiler. & not set \\
+      \texttt{-O, --with-openmp} & to specify to compile the code with OpenMP. & not set \\
+      \texttt{-d, --dumses-root} & to specify the absolute path of your current \textsc{Dumses}-Hybrid installation & \texttt{None} \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
+
+\section{Convert output format}
+
+\textsc{Dumses}-Hybrid is distributed with \textsc{Merco}, that can be found in \texttt{utils/merco/}. \textsc{Merco} is a tool to \textsc{Mer}ge and \textsc{co}nvert \textsc{Dumses} outputs. \textsc{Merco} can be used to convert any \textsc{Dumses} output file from any format (Fortran binary, HDF5, parallel HDF5, parallel NetCDF), \emph{including outputs from \texttt{dumses\_mpi}}, into any other format. It is parallelized with MPI.
+
+\subsection{Configuration and compilation}
+
+\textsc{Merco} comes with a configuration script in Python, as \textsc{Dumses}.
+
+Here is the list of arguments taken by \texttt{configure}:
+\clearpage
+\begin{table}[h!]
+  \centering
+  {\footnotesize
+    \begin{tabular}{l | p{.5\textwidth} | c }
+      ~\hfill argument\hfill~ & ~\hfill definition\hfill~ & ~\hfill default \hfill~ \\
+      \hline
+      \hline
+      \texttt{-h, --help} & show help message & -- \\
+      \hline
+      \multicolumn{3}{c}{\normalsize \bfseries Compiler \& libraries} \\
+      \hline
+      \texttt{-m, --with-mpi} & to specify MPI library directory. If you see that a wrong MPI directory is chosen (typically, the one from your Python distribution), you should use \texttt{--with-mpi=0} to deactivate MPI and avoid to use a non-compatible MPI version. & automatic detection \\
+      \texttt{-H, --with-phdf5} & to specify Parallel HDF5 library directory. If no Parallel HDF5 library is found, it looks for sequential HDF5 library. If you have Parallel or sequential HDF5 installed but don't want to use it, you can use \texttt{--with-phdf5=/}. & automatic detection \\
+      \texttt{-c, --with-pnetcdf} & to specify Parallel NetCDF library directory. If you have Parallel NetCDF installed but don't want to use it, you can use \texttt{--with-pnetcdf=/}. & automatic detection \\
+      \texttt{-f, --with-fortran-compiler} & to specify which Fortran compiler to use. If not set and not on BlueGene, Fortran compiler is retrieve from \texttt{mpif90} executable. & automatic detection \\
+      \hline
+      \multicolumn{3}{c}{\normalsize \bfseries Simulation configuration} \\
+      \hline
+      \texttt{-n, --ndim} & to specify the number of dimensions of the simulation & \texttt{3} \\
+      \hline
+      \multicolumn{3}{c}{\normalsize \bfseries Simulation configuration} \\
+      \hline
+      \texttt{-i, --inter} & to specify if MERCO is used with the interactive interface (\texttt{1}) or with a namelist interface as input. & \texttt{1} \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
+
+As for \textsc{Dumses}-Hybrid, a logfile is generated, storing the last call to configure.
+
+It will then generate a Makefile you can simply:
+
+\begin{codeblock}{bash}
+  make
+\end{codeblock}
+to compile the code.
+
+\subsection{File format detection}
+
+To help you find out the format of the output you want to convert, you can use the \texttt{formatChecker()} function from \texttt{dumpy}:
+
+\begin{codeblock}{python}
+  >>> from dumpy import formatChecker
+  >>> formatChecker('/data/dumses/hybrid/', ndump=0, verbose=True)
+  'This is a parallel NetCDF dumses_hybrid file.'
+
+  >>> formatChecker('/data/dumses/mpi/', ndump=0, verbose=True)
+  'This is a parallel HDF5 dumses_mpi file.'
+\end{codeblock}
+
+\subsection{Run the code -- input parameters}
+
+Here is the list of arguments you can pass either trough a namelist (\texttt{merco.in}) or interactively; if you use \textsc{Merco} in interactive mode, you just have to add a dash in front of the variable name to pass it as an argument to the executable:
+\clearpage
+
+\begin{table}[h!]
+  \centering
+  {\footnotesize
+  \begin{tabular}{l | l | p{.5\textwidth} | c }
+    ~\hfill parameter\hfill~ & ~\hfill type\hfill~ & ~\hfill definition\hfill~ & default value \\
+    \hline
+    \hline
+    \texttt{ndump} & \texttt{integer} & index of the output to convert & \texttt{1} \\
+    \texttt{old} & \texttt{logical} & set to \texttt{.true.} if the output to convert is from a \texttt{dumses\_mpi} simulation & \texttt{.false.} \\
+    \texttt{type\_in} & \texttt{character} & input format type, in [\texttt{'binary'}, \texttt{'hdf5'}, \texttt{'phdf5'}, \texttt{'pnetcdf'}] & \texttt{'binary'} \\
+    \texttt{typ\_out} & \texttt{character} & output format type, in [\texttt{'binary'}, \texttt{'hdf5'}, \texttt{'phdf5'}, \texttt{'pnetcdf'}] & \texttt{'pnetcdf} \\
+    \texttt{ndump} & \texttt{integer} & index of the output to convert & \texttt{1} \\
+    \texttt{xscale} & \texttt{integer} & scaling factor in the $x$-direction to resize the simulation & \texttt{1} \\
+    \texttt{yscale} & \texttt{integer} & scaling factor in the $y$-direction to resize the simulation & \texttt{1} \\
+    \texttt{zscale} & \texttt{integer} & scaling factor in the $z$-direction to resize the simulation & \texttt{1} \\
+    \hline
+    \end{tabular}
+  }
+\end{table}
+
+To run the code, if you use a namelist interface, just do:
+
+\begin{codeblock}{bash}
+  ./merco
+\end{codeblock}
+or
+
+\begin{codeblock}{bash}
+  mpirun -np [nb_proc] ./merco
+\end{codeblock}
+if you run with MPI.
+
+If you use it interactively, you can do, for example:
+
+\begin{codeblock}{bash}
+  ./merco -ndump 0 -type_in binary -type_out pnetcdf -yscale 2
+\end{codeblock}
+
+\section{Additional documentation}
+
+\textsc{Dumses}-Hybrid code is documented using Doxygen; you can then run:
+
+\begin{codeblock}{bash}
+  doxygen doc/Doxyfile
+  [your favorite webbrowser] doc/html/index.html
+\end{codeblock}
+to have access to the full documentation of the code.
+
+\section{Licenses}
+
+\textsc{Dumses}-Hybrid and all is components, \texttt{dumpy} and \textsc{Merco}, are under joint CeCILL-A \& GNU/GPL licenses. 
+
+All the documentation, including this document and the Doxygen-generated documentation, are under a CreativeCommons Attribution-NonCommercial-ShareAlike 4.0 International.
+
+See:
+\begin{itemize}
+  \item \texttt{http://www.cecill.info/licences/Licence\_CeCILL\_V2.1-en.html}
+  \item \texttt{http://www.gnu.org/licenses/}
+  \item \texttt{https://creativecommons.org/licenses/by-nc-sa/4.0/}
+\end{itemize}
+for the full texts of the licenses.
+
+\end{document}

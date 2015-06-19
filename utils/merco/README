@@ -1,0 +1,37 @@
+This is MERCO: a tool to MERge and COnvert DUMSES outputs
+
+Copyrights 2013-2015, CEA, Marc Joos<marc.joos@cea.fr>, Sébastien Fromang
+This software is distributed under the CeCILL-A & GNU/GPL licences (see <http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html> and <http://www.gnu.org/licenses/>)
+
+DUMSES is a 3D MPI/OpenMP & MPI/OpenACC Eulerian second-order Godunov (magneto)hydrodynamic simulation code in cartesian, spherical and cylindrical coordinates. MERCO offers the possibility to convert DUMSES output files from any format (Fortran binary, HDF5, parallel HDF5, parallel NetCDF) to any other format.
+
+
+1. CONFIGURATION/COMPILATION
+
+To configure and compile the code, please execute:
+  ./configure 
+
+with the following optional flags:
+ -h, --help                                print the help
+ -m, --with-mpi=<MPIDIR>                   to specify MPI library directory
+ -H, --with-phdf5=<HDFDIR>                 to specify Parallel HDF5 library directory
+ -c, --with-pnetcdf=<CDFDIR>               to specify Parallel NetCDF library directory
+ -f, --with-fortran-compiler=<FCCMPILER>   to specify which Fortran compiler to use. If not set and not on BlueGene, Fortran compiler is retrieve from 'mpif90' executable
+ -n, --ndim=<NDIM>                         to specify the number of dimensions of the problem. Default: 3
+ -i, --inter=<INTER>                       to specify if the code is executed with an interactive or namelist interface
+ 
+Note that this configure script should automatically detect if you are on a BlueGene machine.
+
+This configuration script will automatically generate a Makefile for your architecture.
+
+2. FILE FORMAT DETECTION
+
+To help you set the 'type_in' input parameter, you can use the formatChecker() function from dumpy. Example:
+
+In [1]: from dumpy import formatChecker
+In [2]: formatChecker('/data/dumses/hybrid/', ndump=0, verbose=True)
+This is a parallel NetCDF dumses_hybrid file.
+Out[2]: (False, 'nc')
+In [2]: formatChecker('/data/dumses/mpi/', ndump=0, verbose=True)
+This is a parallel HDF5 dumses_mpi file.
+Out[2]: (True, 'oldphdf5')

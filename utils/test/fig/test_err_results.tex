@@ -1,0 +1,136 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\IfFileExists{libertine.sty}{
+\usepackage{libertine}
+}{\typeout{> Libertine not available! Use Times instead.}
+\usepackage[varg]{txfonts}}
+
+\author{ }
+\title{\vspace{-2em}
+\texttt{DUMSES} \\ \textsc{Results from the test suite}}
+\date{ }
+
+%% Redefine page layout
+\topmargin -65pt
+\advance \topmargin by -\headheight
+\advance \topmargin by -\headsep
+\textheight 11.1in
+\oddsidemargin 0pt
+\evensidemargin \oddsidemargin
+\marginparwidth 0.5in
+\textwidth 6.5in
+
+%% Change section, subsection etc. layout
+\makeatletter
+\renewcommand{\section}{\@startsection {section}{1}{\z@}%
+             {-3.5ex \@plus -1ex \@minus -.2ex}%
+             {2.3ex \@plus .2ex}%
+             {\normalfont\Large\sffamily\bfseries}}
+
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+             {-3.25ex\@plus -1ex \@minus -.2ex}%
+             {1.5ex \@plus .2ex}%
+             {\normalfont\large\sffamily\bfseries}}
+
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{2}{\z@}%
+             {-3.25ex\@plus -1ex \@minus -.2ex}%
+             {1.5ex \@plus .2ex}%
+             {\normalfont\normalsize\sffamily\bfseries}}
+\makeatother
+
+\begin{document}
+\maketitle
+
+\section{Shock tube}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.7\textwidth]{Shock_tube_Err_x_10}
+\end{figure}
+\vspace{-3em}
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.7\textwidth]{Shock_tube_Err_y_10}
+\end{figure}
+\vspace{-3em}
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.7\textwidth]{Shock_tube_Err_z_10}
+\end{figure}
+\clearpage
+
+\section{Wind tunnel}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.\textwidth]{Wind_tunnel_Err_x_10}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.\textwidth]{Wind_tunnel_Err_y_10}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.\textwidth]{Wind_tunnel_Err_z_10}
+\end{figure}
+\clearpage
+
+\section{Magnetic loop}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.\textwidth]{Magnetic_loop_Err_x_10}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.\textwidth]{Magnetic_loop_Err_y_10}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.\textwidth]{Magnetic_loop_Err_z_10}
+\end{figure}
+\clearpage
+
+\section{Orszag Tang}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.\textwidth]{Orszag_Tang_Err_x_10}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.\textwidth]{Orszag_Tang_Err_y_10}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.\textwidth]{Orszag_Tang_Err_z_10}
+\end{figure}
+
+\section{Shearing conditions}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.5\textwidth]{Incompressible_shearing_Err_x_10} &
+\end{figure}
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.5\textwidth]{Shearing_wave_Err_x_10} &
+\end{figure}
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.5\textwidth]{Radial_shearing_Err_x_10} &
+\end{figure}
+
+
+\end{document}

@@ -1,0 +1,41 @@
+&start_params
+	tlim    = 500000.
+       ,verbose = .false.
+       ,debug   = .false.
+       /
+
+&scheme_params
+	bdtypex    = 'periodic'
+       ,bdtypey    = 'periodic'
+       ,bdtypez    = 'periodic'
+       ,riemann    = 'hlld'
+       ,riemann2d  = 'hlld'
+       ,slope_type = 2
+       ,courant    = 0.8
+       /
+
+&model_params
+	nx     = 32
+       ,ny     = 1
+       ,nz     = 1
+       ,xmin   = -.5d0
+       ,xmax   = .5d0
+       ,ymin   = -2.d0
+       ,ymax   = 2.d0
+       ,zmin   = -.25d0
+       ,zmax   = .25d0
+       ,Omega0 = 1.d-3
+       ,ciso   = 1.d-3
+       /
+
+&output_params
+	dtdump  = 1000000.d0
+	dthist  = 100.d0
+       ,io_type = 'pnetcdf'
+	/
+
+&mpi_params
+	nxslice = 1
+	nyslice = 1
+	nzslice = 1
+	/

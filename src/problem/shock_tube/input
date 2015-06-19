@@ -1,0 +1,42 @@
+&start_params
+	tlim    = .245
+       ,verbose = .false.
+       ,debug   = .false.
+       /
+
+&scheme_params
+	bdtypex    = 'zero_gradient'
+       ,riemann    = 'hlld'
+       ,slope_type = 2
+       ,courant    = 0.7
+       /
+
+&model_params
+	nx     = 128
+       ,ny     = 1
+       ,nz     = 1
+       ,xmin   = 0.d0
+       ,xmax   = 1.d0
+       ,ymin   = -0.5d0
+       ,ymax   = 0.5d0
+       ,zmin   = 0.d0
+       ,zmax   = 1.d0
+       ,Omega0 = 0.d0
+       ,ciso   = 0.d0
+       ,gamma  = 5./3.
+       /
+
+&output_params
+	dtdump  = .0245
+       ,io_type = 'hdf5'
+	/
+
+&mpi_params
+	nxslice = 1
+	nyslice = 1
+	nzslice = 1
+	/
+
+&init_params
+        direction = 'x'
+    	/

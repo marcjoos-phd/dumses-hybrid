@@ -1,0 +1,467 @@
+#!/usr/bin/env python
+#===============================================================================
+# DUMSES-Hybrid:
+# DUMSES configure script.
+# 
+# author:
+# Marc Joos <marc.joos@cea.fr>, Sebastien Fromang, Romain Teyssier, 
+# Patrick Hennebelle
+# copyright:
+# Copyrights 2013-2015, CEA
+# This file is distributed under the CeCILL-A & GNU/GPL licenses, see
+# <http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html> and
+# <http://www.gnu.org/licenses/>
+# date:
+# created:       01-10-2013
+# last modified: 05-29-2015
+#===============================================================================
+import os, sys, glob
+from datetime import datetime
+if sys.version_info[0] <= 2:
+    from commands import getstatusoutput as cmd
+else:
+    from subprocess import getstatusoutput as cmd
+if sys.version_info[1] >= 7:
+    import argparse
+else:
+    sys.path.append('utils/pyutils/')
+    import argparse
+
+bold    = "\033[1m"
+reset   = "\033[0;0m"
+
+def splitDir(oldDir, n=0):
+    dirSplit = oldDir.split('/')
+    newDir   = ''
+    for i in xrange(1,len(dirSplit) - n):
+        newDir = newDir + '/' + dirSplit[i]
+    return newDir
+
+def checkDir(exDir):
+    st, out = cmd("if [ -e " + exDir + " ]; then echo 'exists'; fi")
+    return out == "exists"
+
+def defMPI(FCompiler=None, MPI=None):
+    stBG, BGCompiler = cmd("which mpixlf90_r")
+    if stBG != 0:
+        if not(FCompiler):
+            if MPI == 0:
+                print(bold + "> without MPI library" + reset)
+                mpidir = ""
+                mpi    = 0
+            elif isinstance(MPI, str):
+                mpidir = MPI
+                mpi    = 1
+            else:
+                stmpi, mpidir = cmd("which mpif90")
+                if stmpi != 0:
+                    print(bold + "> WARNING" + reset + ": MPI not found, compilation only with OpenMP" + reset)
+                    mpidir = ""
+                    mpi    = 0
+                else:
+                    mpidir = splitDir(mpidir, 2)
+                    mpi    = 1
+        else:
+            if not(MPI):
+                print(bold + "> WARNING: " + reset + "specifying your Fortran compiler deactivate MPI, unless you specify a MPI library path")
+                mpidir = ""
+                mpi    = 0
+            else:
+                stmpi, mpidir = cmd("which " + MPI + "/bin/mpif90")
+                if stmpi != 0:
+                    print(bold + "> WARNING" + reset + ": the given path is not valid for MPI library. MPI is deactivated.")
+                    mpidir = ""
+                    mpi    = 0
+                else:
+                    mpidir = MPI
+                    mpi    = 1
+        if mpi == 1:
+            print(bold + "> MPI library located at" + reset + ": " + mpidir)
+    else:
+        print(bold + "> IBM MPI library" + reset)
+        mpidir = ""
+        mpi    = 1
+    return (mpidir, mpi)
+
+def defHDF(HDF=None):
+    hdf5, phdf5 = 0, 0; hdfdir = ""
+    if not(HDF):
+        sthdf, hdfdir = cmd("which ph5diff")
+        if sthdf != 0:
+            print(bold + "> without parallel HDF5 library" + reset)
+            sthdf, hdfdir = cmd("which h5fc")
+            if sthdf != 0:
+                print(bold + "> without HDF5 library" + reset)
+            else:
+                hdfdir = splitDir(hdfdir, 2)
+                hdf5   = 1
+        else:
+            hdfdir = splitDir(hdfdir, 2)
+            phdf5  = 1
+    else:
+        sthdf, hdfbin = cmd("which " + HDF + "/bin/ph5diff")
+        if sthdf != 0:
+            print(bold + "> Without parallel HDF5 library" + reset)
+            sthdf, hdfbin = cmd("which " + HDF + "/bin/h5fc")
+            if sthdf != 0:
+                print(bold + "> without HDF5 library" + reset)
+            else:
+                hdfdir = HDF
+                hdf5   = 1
+        else:
+            hdfdir = HDF
+            phdf5  = 1
+    if hdf5 == 1 or phdf5 == 1:
+        print(bold + "> HDF5 library located at" + reset + ": " + hdfdir)
+    return (hdfdir, hdf5, phdf5)
+
+def defCDF(CDF=None):
+    pncdf = 0; cdfdir = ""
+    if not(CDF):
+        stcdf, cdfdir = cmd("which ncmpidump")
+        if stcdf != 0:
+            print(bold + "> without Parallel NetCDF library" + reset)
+        else:
+            cdfdir = splitDir(cdfdir, 2)
+            pncdf  = 1
+    else:
+        stcdf, cdfbin = cmd("which " + CDF + "/bin/ncmpidump")
+        if stcdf != 0:
+            print(bold + "> without Parallel NetCDF library" + reset)
+        else:
+            cdfdir = CDF
+            pncdf  = 1
+    if pncdf == 1:
+        print(bold + "> PnetCDF library located at" + reset + ": " + cdfdir)
+    return (cdfdir, pncdf)
+
+def defProblem(problem=None):
+    if not(problem):
+        problem = "magnetic_loop"
+        print(bold + "> Set default value for problem: " + reset + problem)
+    else:
+        if checkDir('src/problem/' + problem):
+            print(bold + "> Set problem to: " + reset + problem)
+        else:
+            print(bold + "> WARNING" + reset + ": problem '" + problem \
+                       + "' does not exist")
+            sys.exit(1)
+    problem = "src/problem/" + problem
+    return problem
+
+def defNDIM(ndim=None):
+    if isinstance(ndim, int):
+        if((ndim > 0) & (ndim < 4)):
+            print(bold + "> Set NDIM to: " + reset + "%d" %ndim)
+        else:
+            print(bold + "> WARNING" + reset + ": NDIM=%d" %ndim + " is not in [1,3]; set default value to NDIM: 3")
+            ndim = 3
+    else:
+        print(bold + "> Set default value to NDIM" + reset + ": 3")
+        ndim = 3
+    return ndim
+
+def defIso(iso=None):
+    if isinstance(iso, int):
+        if(iso < 2):
+            print(bold + "> Set ISO to: " + reset + "%d" %iso)
+        else:
+            print(bold + "> WARNING" + reset \
+                       + ": wrong value for ISO, setting it to default value")
+            iso = 1
+    else:
+        print(bold + "> Set default value for ISO: " + reset \
+                   + "non-isothermal computation")
+        iso = 0
+    return iso
+
+def defFCompiler(FCompiler=None, mpi=0, mpidir="", openacc=0, debug=0, auto=0):
+    knownFC, PGIFC = 0, 0
+    stBG, BGCompiler = cmd("which mpixlf90_r")
+    if stBG != 0:
+        if len(mpidir) == 0:
+            if not(FCompiler):
+                if auto: print(bold + "> Warning" + reset + ": no autoparallelization available with GNU compiler")
+                FCompiler = "gfortran"
+                fflags    = "-fopenmp -O3 -ffast-math -ffree-line-length-0"
+                cppflags  = "-x f95-cpp-input"
+                modflags  = "-J$(BINDIR)"
+                knownFC   = 1
+                if debug:
+                    fflags    = "-fopenmp -O0 -Wall -fcheck=all -fbacktrace -g -ffree-line-length-0"
+            else:
+                if(FCompiler == "gfortran"):
+                    if auto: print(bold + "> Warning" + reset + ": no autoparallelization available with GNU compiler")
+                    fflags = "-fopenmp -O3 -ffast-math -ffree-line-length-0"
+                    cppflags = "-x f95-cpp-input"
+                    modflags = "-J$(BINDIR)"
+                    knownFC  = 1
+                    if debug:
+                        fflags    = "-fopenmp -O0 -Wall -fcheck=all -fbacktrace -g -ffree-line-length-0"
+                elif(FCompiler == "ifort"):
+                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -fast -mkl"
+                    cppflags = "-fpp"
+                    modflags = "-module $(BINDIR)"
+                    knownFC  = 1
+                    if debug:
+                        fflags   = ("-parallel" if auto else "-openmp") + " -g -traceback -O0 -debug -fpe-all=0 -warn all"
+
+                elif((FCompiler == "pgf90") or (FCompiler == "pgfortran")):
+                    fflags   = ("-Mconcur" if auto else "-mp") + " -O3 -fast"
+                    cppflags = "-Mpreprocess"
+                    modflags = "-module $(BINDIR)"
+                    knownFC  = 1
+                    PGIFC    = 1
+                    if debug:
+                        fflags = ("-Mconcur" if auto else "-mp") + " -O0 -traceback -g -Minfo=all -Mbounds -Mchkfpstk -Mchkptr"
+            mpiinc, mpilib = "", ""
+        else:
+            if not(FCompiler):
+                stfc, FC = cmd(mpidir + "/bin/mpif90 -show | tr ' ' ' '")
+                FCompiler = FC.split()[0]
+                if(FCompiler == "gfortran"):
+                    if auto: print(bold + "> Warning" + reset + ": no autoparallelization available with GNU compiler")
+                    fflags = "-fopenmp -O3 -ffast-math -ffree-line-length-0"
+                    cppflags = "-x f95-cpp-input"
+                    modflags = "-J$(BINDIR)"
+                    knownFC  = 1
+                    if debug:
+                        fflags    = "-fopenmp -O0 -Wall -fcheck=all -fbacktrace -g -ffree-line-length-0"
+                elif(FCompiler == "ifort"):
+                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -fast -mkl"
+                    cppflags = "-fpp"
+                    modflags = "-module $(BINDIR)"
+                    knownFC  = 1
+                    if debug:
+                        fflags   = ("-parallel" if auto else "-openmp") + " -g -traceback -O0 -debug -fpe-all=0 -warn all"
+                elif((FCompiler == "pgf90") or (FCompiler == "pgfortran")):
+                    fflags   = ("-Mconcur" if auto else "-mp") + " -O3 -fast"
+                    cppflags = "-Mpreprocess"
+                    modflags = "-module $(BINDIR)"
+                    knownFC  = 1
+                    PGIFC    = 1
+                    if debug:
+                        fflags = ("-Mconcur" if auto else "-mp") + " -O0 -traceback -g -Minfo=all -Mbounds -Mchkfpstk -Mchkptr"
+                FCompiler = "mpif90"
+                mpiinc, mpilib = "", ""
+            else:
+                if(FCompiler == "gfortran"):
+                    if auto: print(bold + "> Warning" + reset + ": no autoparallelization available with GNU compiler")
+                    fflags = "-fopenmp -O3 -ffast-math -ffree-line-length-0"
+                    cppflags = "-x f95-cpp-input"
+                    modflags = "-J$(BINDIR)"
+                    knownFC  = 1
+                    if debug:
+                        fflags    = "-fopenmp -O0 -Wall -fcheck=all -fbacktrace -g -ffree-line-length-0"
+                elif(FCompiler == "ifort"):
+                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -fast -mkl"
+                    cppflags = "-fpp"
+                    modflags = "-module $(BINDIR)"
+                    knownFC  = 1
+                    if debug:
+                        fflags   = ("-parallel" if auto else "-openmp") + " -g -traceback -O0 -debug -fpe-all=0 -warn all"
+                elif((FCompiler == "pgf90") or (FCompiler == "pgfortran")):
+                    fflags   = ("-Mconcur" if auto else "-mp") + " -O3 -fast"
+                    cppflags = "-Mpreprocess"
+                    modflags = "-module $(BINDIR)"
+                    knownFC  = 1
+                    PGIFC    = 1
+                    if debug:
+                        fflags = ("-Mconcur" if auto else "-mp") + " -O0 -traceback -g -Minfo=all -Mbounds -Mchkfpstk -Mchkptr"
+                mpiinc = "-I" + mpidir + "/include -I" + mpidir + "/lib"
+                if 'mpich' in mpidir:
+                    mpilib = "-L" + mpidir + "/lib -lmpi"
+                else:
+                    mpilib = "-L" + mpidir + "/lib -lmpi -lmpi_f77"
+        phyflags = "-DPNCDF=$(PNCDF) -DHDF5=$(HDF5) -DPHDF5=$(PHDF5) -DNDIM=$(NDIM) -DISO=$(ISO) -DMPI=$(MPI) -DPGIFC=$(PGIFC) -DGEOM=$(GEOM)"
+        phyflags += " -DCARTESIAN=1 -DCYLINDRICAL=2 -DSPHERICAL=3"
+    else:
+        print(bold + "> Compilation on BlueGene" + reset)
+        FCompiler = "mpixlf90_r"
+        fflags    = "-qnullterm -O3 -g " + ("-qsmp=auto" if auto else "-qsmp=omp")
+        if debug:
+            fflags  = "-qnullterm -O0 " + ("-qsmp=auto" if auto else "-qsmp=omp")
+            fflags += " -qsource -qattr -qxref -qreport=smplist -qlist -C"
+            fflags += " -qstrict -qfloat=nans -qkeepparm -qsigtrap -qlanglvl=95std"
+            fflags += " -qflttrap=overflow:underflow:zerodivide:invalid:qpxstore:enable"
+            fflags += " -g -qfullpath -qoptdebug"
+        cppflags  = "-qsuffix=cpp=f90"
+        modflags  = "-qmoddir=$(BINDIR)"
+        phyflags  = "-WF,-DPNCDF=$(PNCDF),-DHDF5=$(HDF5),-DPHDF5=$(PHDF5),-DNDIM=$(NDIM),-DISO=$(ISO),-DMPI=$(MPI),-DGEOM=$(GEOM),-DBLUEGENE=1"
+        phyflags += ",-DCARTESIAN=1,-DCYLINDRICAL=2,-DSPHERICAL=3"
+        knownFC   = 1
+        mpiinc, mpilib = "", ""
+    if openacc:
+        if not(PGIFC):
+            print(bold + "> WARNING" + reset + ": you specified a wrong compiler to work with OpenACC; changing your compiler to 'pgfortran' and " + bold + "deactivate MPI" + reset)
+            FCompiler = "pgfortran"
+            cppflags  = "-Mpreprocess"
+            modflags  = "-module $(BINDIR)"
+            knownFC   = 1
+            PGIFC     = 1
+            mpi       = 0
+        print(bold + "> for accelerators with OpenACC" + reset)
+        fflags = "-O3 -acc -ta=nvidia,fastmath,cc35,host,time,tesla:maxregcount:64 -Minfo=accel"
+        phyflags = phyflags + " -DOACC=$(OACC)"
+        if debug:
+            fflags = "-O0 -traceback -g -Minfo=all -Mbounds -Mchkfpstk -Mchkptr -acc -ta=nvidia,cc35,host,time,tesla:maxregcount:64"
+    else:
+        if auto: print(bold + "> with auto-parallelization option" + reset)
+        print(bold + "> for CPU only, without OpenACC" + reset)
+    if debug:
+        print(bold + "> With debugging compiler options" + reset)
+    if not(knownFC):
+        print(bold + "ERROR" + reset + ": unknown Fortran compiler. Exiting...")
+        sys.exit(1)
+    else:
+        print(bold + "> Fortran compiler" + reset + ": " + FCompiler)
+    return (FCompiler, fflags, cppflags, modflags, phyflags, mpi, mpiinc, mpilib, PGIFC)
+
+def createMakefile(ndim=3, iso=1, geom='cartesian', mpi=0, hdf5=0, phdf5=0 \
+                 , pncdf=0, pgifc=0, oacc=0 \
+                 , problem="src/problem/magnetic_loop", fccompiler="gfortran" \
+                 , fflags="-fopenmp -O3 -fbacktrace -g -ffree-line-length-0" \
+                 , cppflags="-x f95-cpp-input" \
+                 , modflags="-J$(BINDIR)" \
+                 , phyflags="-DPNCDF=$(PNCDF) -DHDF5=$(HDF5) -DPHDF5=$(PHDF5) -DNDIM=$(NDIM) -DISO=$(ISO) -DMPI=$(MPI) -DPGIFC=$(PGIFC)" \
+                 , mpiinc="", mpilib="", hdfdir="", cdfdir=""):
+    st, out = cmd('cp Makefile.template Makefile')
+    template = open('Makefile', 'rt').read()
+    data = {"ndim": str(ndim), "iso": str(iso), "geom": str(geom) \
+          , "mpi": str(mpi), "hdf5": str(hdf5), "phdf5": str(phdf5) \
+          , "pncdf": str(pncdf), "pgifc": str(pgifc), "oacc": str(oacc) \
+          , "problem": problem, "fccompiler": fccompiler, "fflags": fflags \
+          , "cppflags": cppflags, "modflags": modflags, "phyflags": phyflags \
+          , "mpiinc": mpiinc, "mpilib": mpilib, "hdfdir": hdfdir \
+          , "cdfdir": cdfdir, "tab": "\t"}
+
+    with open('Makefile', 'wt') as output:
+        output.write(template %data)
+
+def main():
+    parser = argparse.ArgumentParser(description="Configure script to generate DUMSES Makefile. You can overwrite basic informations with the following environment variables: F90 (Fortran compiler), F90_FLAGS (Fortran flags), MPI_LIB (MPI library path) and MPI_INC (MPI include path). Note that this configure script should automatically detect if you are on a " + bold + "BlueGene" + reset + " machine.")
+    parser.add_argument("--with-mpi=", "-m", dest="MPIDIR", default=None \
+                      , help="to specify MPI library directory. If you see that a wrong MPI directory is chosen (typically, the one from your Python distribution), you should use '-m 0' to deactivate MPI and avoid to use a non-compatible MPI version.")
+    parser.add_argument("--with-phdf5=", "-H", dest="HDFDIR", default=None \
+                      , type=str, help="to specify Parallel HDF5 library directory. If no Parallel HDF5 library is found, it looks for sequential HDF5 library. If you have Parallel or sequential HDF5 installed but don't want to use it, you can use '--with-phdf5=/'.")
+    parser.add_argument("--with-pnetcdf=", "-c", dest="CDFDIR", default=None \
+                      , type=str, help="to specify Parallel NetCDF library directory. If you have Parallel NetCDF installed but don't want to use it, you can use '--with-pnetcdf=/'.")
+    parser.add_argument("--with-fortran-compiler=", "-f", dest="FCCOMPILER" \
+                      , default=None, type=str, help="to specify which Fortran compiler to use. If not set and not on BlueGene, Fortran compiler is retrieve from 'mpif90' executable")
+    parser.add_argument("--with-openacc", "-o", dest="OACC", action="store_true" \
+                      , help="to specify to compile the code for accelerators. Compatible only with PGI compiler.")
+    parser.add_argument("--problem=", "-p", dest="PROBLEM", default=None \
+                      , type=str, help="to specify which problem to initialize. Default: magnetic_loop")
+    parser.add_argument("--ndim=", "-n", dest="NDIM", default=None, type=int \
+                      , help="to specify the number of dimensions of the problem. Default: 3")
+    parser.add_argument("--isothermal=", "-i", dest="ISO", default=None \
+                      , type=int, help="to specify if the computation is isothermal or not. Default: 1 (isothermal)")
+    parser.add_argument("--geometry=", "-g", dest="GEOM", default=None \
+                      , type=str, help="to specify the geometry of the problem (in 'cartesian', 'cylindrical', 'spherical'). Default: 'cartesian'")
+    parser.add_argument("--debug", "-d", dest="DEBUG", action="store_true" \
+                      , help="to use debugging compiler options; for debug purpose only.")
+    parser.add_argument("--auto-parallel", "-a", dest="AUTOP", action="store_true" \
+                      , help="to use auto-parallelization option of the compiler.")
+
+    args = parser.parse_args()
+    MPI, HDF, CDF, FCC  = args.MPIDIR, args.HDFDIR, args.CDFDIR, args.FCCOMPILER
+    ACC, PRO, NDIM, ISO = args.OACC, args.PROBLEM, args.NDIM, args.ISO
+    GEOM, DEBUG, AUTOP  = args.GEOM, args.DEBUG, args.AUTOP
+    ACC = (0 if not(ACC) else 1)
+    DEBUG = (0 if not(DEBUG) else 1)
+    AUTOP = (0 if not(AUTOP) else 1)
+
+    f = open("conf.log", "wt")
+    f.write("# Command line of the last execution of ./configure,\n")
+    f.write("# on: " + datetime.now().strftime("%Y-%m-%d %H:%M") + "\n")
+    f.write("./configure" + ("" if MPI == None else " --with-mpi=" + str(MPI)) \
+        + ("" if HDF == None else " --with-phdf5=" + str(HDF)) \
+        + ("" if CDF == None else " --with-pnetcdf=" + str(CDF)) \
+        + ("" if FCC == None else " --with-fortran-compiler=" + str(FCC)) \
+        + ("" if ACC == 0 else " --with-openacc") \
+        + ("" if PRO == None else " --problem=" + str(PRO)) \
+        + ("" if NDIM == None else " --ndim=" + str(NDIM)) \
+        + ("" if ISO == None else " --isothermal=" + str(ISO)) \
+        + ("" if GEOM == None else " --geometry=" + str(GEOM)) \
+        + ("" if DEBUG == 0 else "--debug") \
+        + ("" if AUTOP == 0 else "--auto-parallel"))
+    f.close()
+
+    geom = ('cartesian' if not GEOM else GEOM)
+    try:
+        assert(geom in ['cartesian', 'cylindrical', 'spherical'])
+    except AssertionError:
+        print "geometry option must be in {'cartesian', 'cylindrical', 'spherical'}"
+        sys.exit(0)
+
+    print(bold + "Generating Makefile with: " + reset)
+    if MPI == "0": MPI = 0
+    mpidir, mpi         = defMPI(FCompiler=FCC, MPI=MPI)
+    hdfdir, hdf5, phdf5 = defHDF(HDF=HDF)
+    cdfdir, pncdf       = defCDF(CDF=CDF)
+    problem             = defProblem(problem=PRO)
+    ndim                = defNDIM(ndim=NDIM)
+    iso                 = defIso(iso=ISO)
+    print(bold + "> With geometry: " + reset + geom)
+    fccompiler, fflags, cppflags, modflags, phyflags, mpi, mpiinc, mpilib, pgifc \
+        = defFCompiler(FCompiler=FCC, mpi=mpi, mpidir=mpidir, openacc=ACC, debug=DEBUG \
+                     , auto=AUTOP)
+
+    hdfdir = (hdfdir if hdfdir.find("which") == -1 else "")
+    cdfdir = (cdfdir if cdfdir.find("which") == -1 else "")
+
+    F90, F90_FLAGS, MPI_LIB, MPI_INC = None, None, None, None
+    try:
+        F90 = os.environ['F90']
+    except KeyError:
+        pass
+    try:
+        F90_FLAGS = os.environ['F90_FLAGS']
+    except KeyError:
+        pass
+    try:
+        MPI_LIB = os.environ['MPI_LIB']
+    except KeyError:
+        pass
+    try:
+        MPI_INC = os.environ['MPI_INC']
+    except KeyError:
+        pass
+
+    fcchange, ffchange, mlchange, michange = 0, 0, 0, 0
+    if F90: 
+        fccompiler = F90
+        fcchange = 1
+    if F90_FLAGS: 
+        fflags = F90_FLAGS
+        ffchange = 1
+    if MPI_LIB: 
+        mpilib = MPI_LIB
+        mlchange = 1
+    if MPI_INC: 
+        mpiinc = MPI_INC
+        michange = 1
+
+    if (fcchange or ffchange or mlchange or michange): 
+        sys.stdout.write(bold + "Warning: " + reset)
+        if fcchange: 
+            sys.stdout.write("Fortran compiler")
+            if(ffchange or mlchange or michange): sys.stdout.write(", ")
+        if ffchange:
+            sys.stdout.write("Fortran flags"),
+            if(mlchange or michange): sys.stdout.write(", ")
+        if mlchange:
+            sys.stdout.write("MPI library"),
+            if(michange): sys.stdout.write(", ")
+        if michange:
+            sys.stdout.write("MPI include")
+        sys.stdout.write(" changed by environment variable(s)\n")
+
+    createMakefile(ndim=ndim, iso=iso, geom=geom, mpi=mpi, hdf5=hdf5 \
+                 , phdf5=phdf5, pncdf=pncdf, pgifc=pgifc, oacc=ACC \
+                 , problem=problem, fccompiler=fccompiler, fflags=fflags \
+                 , cppflags=cppflags, modflags=modflags, phyflags=phyflags \
+                 , mpiinc=mpiinc, mpilib=mpilib, hdfdir=hdfdir, cdfdir=cdfdir)
+
+if __name__ == "__main__":
+    main()
