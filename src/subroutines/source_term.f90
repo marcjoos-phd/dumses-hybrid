@@ -14,8 +14,8 @@
 !! <http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html> and
 !! <http://www.gnu.org/licenses/>
 !! \date
-!! \b created:          25-03-2015 
-!! \b last \b modified: 25-03-2015
+!! \b created:          03-25-2015 
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 !> Compute source term
@@ -30,7 +30,6 @@ subroutine source_term
   !$py begin_statement
 
   ! Gravity term
-  !$acc kernels loop
   !$OMP PARALLEL DO SCHEDULE(RUNTIME)
   do k = 1, nz
      do j = 1, ny
@@ -66,7 +65,6 @@ subroutine gravity_predictor(v, igrav, jgrav, kgrav)
   klo = min(1,ku1+1); khi = max(1,ku2-1)
 
   ! v = v + 1/2*gravin*dt
-  !$acc kernels loop
   !$OMP PARALLEL DO SCHEDULE(RUNTIME)
   do k = klo, khi
      do j = jlo, jhi

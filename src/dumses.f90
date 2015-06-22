@@ -13,7 +13,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 05-22-2015
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 !>
@@ -84,11 +84,13 @@ program dumses
      call compute_dt(dt)
      !$py end_timing Timestep
      if (rhs) then
+        !$acc update host(uin)
         uin_old = uin
      endif
      call godunov
      if (rhs) then
         !$py start_timing Source term
+        !$acc update host(uin)
         call source_term
         !$py end_timing Source term
      endif
