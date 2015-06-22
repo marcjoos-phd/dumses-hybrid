@@ -15,7 +15,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-30-2014 
-!! \b last \b modified: 03-27-2015
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 !> \brief
@@ -226,6 +226,8 @@ subroutine restart_run
      read(10) uin
      close(10)
   endif
+
+  call user_restart
 
   return
 end subroutine restart_run

@@ -21,9 +21,7 @@
 !> User customization at restart
 !===============================================================================
 subroutine user_restart
-  use precision
-  use params, only: nvar
-  use variables, only: uin
+  use params
   implicit none
 
   return
