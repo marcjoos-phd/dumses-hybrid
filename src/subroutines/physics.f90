@@ -16,7 +16,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 05-06-2015
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 !> Compute timestep \c dt
@@ -311,7 +311,7 @@ subroutine resistivity
   dBydx = zero; dBydz = zero
   dBzdx = zero; dBzdy = zero
 
-  !!$acc kernels loop !-> can't be parallelized because of the subroutine call
+  !$acc kernels loop
   !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(dBxdy, dBxdz, dBydx, dBydz) &
   !$OMP PRIVATE(dBzdx, dBzdy, jx, jy)
   do k = kf1, kf2
@@ -333,11 +333,14 @@ subroutine resistivity
            jy = dBxdz - dBzdx; jz = dBydx - dBxdy
 
 #if NDIM > 1
-           call get_eta(eta, x(i))
+           ! WARNING: if you intend to use a custom eta, you should be very
+           ! careful with OpenACC, that does not support calls to subroutines
+           ! in a loop
+           !call get_eta(eta, x(i))
            emfx(i,j,k) = -eta*jx*dt
 #endif
            
-           call get_eta(eta, half*(x(i) + x(i-1)))
+           !call get_eta(eta, half*(x(i) + x(i-1)))
            emfy(i,j,k) = -eta*jy*dt
            emfz(i,j,k) = -eta*jz*dt
         enddo
