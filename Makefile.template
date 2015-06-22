@@ -83,6 +83,7 @@ endif
 MODDIR  = $(SRCDIR)/modules
 SMODDIR = $(shell ls -d $(MODDIR)/*/)
 SUBDIR  = $(SRCDIR)/subroutines
+USRDIR  = $(SRCDIR)/userfiles
 ifeq ("$(wildcard $(PRBDIR)/modules)","")
 PRMDIR  =
 else
@@ -94,6 +95,7 @@ SRCFROMBIN  = ../$(BINDIR)
 MODFROMBIN  = ../../$(BINDIR)
 SMODFROMBIN = ../../../$(BINDIR)
 SUBFROMBIN  = ../../$(BINDIR)
+USRFROMBIN  = ../../$(BINDIR)
 PRBFROMBIN  = ../../../$(BINDIR)
 ifneq ("$(PRMDIR)","")
 PRMFROMBIN  = ../../../../$(BINDIR)
@@ -103,6 +105,7 @@ SRCFROMBIN  = ../../$(BINDIR)
 MODFROMBIN  = ../../../$(BINDIR)
 SMODFROMBIN = ../../../../$(BINDIR)
 SUBFROMBIN  = ../../../$(BINDIR)
+USRFROMBIN  = ../../../$(BINDIR)
 PRBFROMBIN  = ../../../../$(BINDIR)
 ifneq ("$(PRMDIR)","")
 PRMFROMBIN  = ../../../../../$(BINDIR)
@@ -126,10 +129,13 @@ PRBOBJ    = $(join $(addsuffix $(PRBFROMBIN)/, $(dir $(PRBFILES))), \
 SUBFILES  = $(wildcard $(SUBDIR)/*f90)
 SUBOBJ    = $(join $(addsuffix $(SUBFROMBIN)/, $(dir $(SUBFILES))), \
 	  $(notdir $(SUBFILES:.f90=.o)))
+USRFILES  = $(wildcard $(USRDIR)/*f90)
+USROBJ    = $(join $(addsuffix $(USRFROMBIN)/, $(dir $(USRFILES))), \
+	  $(notdir $(USRFILES:.f90=.o)))
 SRCFILES  = $(wildcard $(SRCDIR)/*f90)
 SRCOBJ    = $(join $(addsuffix $(SRCFROMBIN)/, $(dir $(SRCFILES))), \
 	  $(notdir $(SRCFILES:.f90=.o)))
-ALLOBJ    = $(MODOBJ) $(SMODOBJ) $(PRMOBJ) $(PRBOBJ) $(SUBOBJ) $(SRCOBJ)
+ALLOBJ    = $(MODOBJ) $(SMODOBJ) $(PRMOBJ) $(PRBOBJ) $(SUBOBJ) $(USROBJ) $(SRCOBJ)
 
 # Compilation rules
 #== all: compile main program ==================================================
@@ -151,6 +157,8 @@ $(PRBDIR)/$(PRBFROMBIN)/%%.o: $(PRBDIR)/%%.f90
 #== Subroutines ================================================================
 $(SUBDIR)/$(SUBFROMBIN)/%%.o: $(SUBDIR)/%%.f90
 %(tab)s@echo "> $(bold)Compiling subroutines$(reset): "$@
+%(tab)s$(F90) $(ALLFLAGS) -c $^ -o $@
+$(USRDIR)/$(USRFROMBIN)/%%.o: $(USRDIR)/%%.f90
 %(tab)s$(F90) $(ALLFLAGS) -c $^ -o $@
 #== Main sources ===============================================================
 $(SRCDIR)/$(SRCFROMBIN)/%%.o: $(SRCDIR)/%%.f90
