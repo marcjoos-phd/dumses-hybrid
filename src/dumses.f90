@@ -92,6 +92,7 @@ program dumses
         !$py start_timing Source term
         !$acc update host(uin)
         call source_term
+        !$acc update device(uin)
         !$py end_timing Source term
      endif
      !$py start_timing FARGO
