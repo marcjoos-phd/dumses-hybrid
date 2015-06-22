@@ -13,7 +13,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 07-29-2014
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 subroutine condinit
@@ -34,7 +34,6 @@ subroutine condinit
 
   ! Wind tunnel with point explosion
   if (direction == "x") then
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME)
      do k = ku1, ku2
         do j = ju1, ju2
@@ -51,7 +50,6 @@ subroutine condinit
      enddo
      !$OMP END PARALLEL DO
   else if (direction == "y") then
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME)
      do k = ku1, ku2
         do j = ju1, ju2
@@ -68,7 +66,6 @@ subroutine condinit
      enddo
      !$OMP END PARALLEL DO
   else
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME)
      do k = ku1, ku2
         do j = ju1, ju2

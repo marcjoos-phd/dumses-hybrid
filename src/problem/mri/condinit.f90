@@ -13,7 +13,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 04-27-2015
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 subroutine condinit
@@ -66,7 +66,6 @@ subroutine condinit
   call random_seed(put=seed)
 #endif
 
-  !$acc update host(x, y, z)
   !$OMP PARALLEL DO SCHEDULE(RUNTIME)
   do k = ku1, ku2
      do j = ju1, ju2
@@ -113,7 +112,6 @@ subroutine condinit
      end do
   end do
   !$OMP END PARALLEL DO
-  !$acc update device(uin)
 
   deallocate(seed)
 

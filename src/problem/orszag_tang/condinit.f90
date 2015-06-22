@@ -13,7 +13,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 01-27-2014
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 subroutine condinit
@@ -41,7 +41,6 @@ subroutine condinit
   p0    = gamma/(2.d0*twopi)
   
   if(direction .eq. 'x') then
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME)
      do k = ku1, ku2
         do j = ju1, ju2
@@ -61,7 +60,6 @@ subroutine condinit
      !$OMP END PARALLEL DO
 
   else if (direction .eq. 'y') then
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME)
      do k = ku1, ku2
         do j = ju1, ju2
@@ -80,7 +78,6 @@ subroutine condinit
      enddo
      !$OMP END PARALLEL DO
   else
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME)
      do k = ku1, ku2
         do j = ju1, ju2
@@ -100,7 +97,6 @@ subroutine condinit
      !$OMP END PARALLEL DO
   endif
   
-  !$acc kernels loop
   !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(Ek, Em)
   do k = ku1, ku2
      do j = ju1, ju2

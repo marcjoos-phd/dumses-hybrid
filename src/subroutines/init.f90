@@ -92,7 +92,9 @@ subroutine init
   dt   = zero
 
   call init_grid
+  !$acc update host(x, y, z)
   call condinit
+  !$acc update device(uin)
   call boundary
 
   ! User define quantities or initial values

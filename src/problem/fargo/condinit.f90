@@ -13,7 +13,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          05-22-2015
-!! \b last \b modified: 05-26-2015
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 subroutine condinit
@@ -43,7 +43,6 @@ subroutine condinit
 
   Az = 0.d0
 
-  !$acc kernels loop
   !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(dist)
   do j = ju1, ju2
      do i = iu1, iu2
@@ -57,7 +56,6 @@ subroutine condinit
   end do
   !$OMP END PARALLEL DO
 
-  !$acc kernels loop
   !$OMP PARALLEL DO SCHEDULE(RUNTIME)
   do k = ku1, ku2
      do j = ju1, ju2

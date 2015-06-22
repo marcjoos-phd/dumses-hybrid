@@ -13,7 +13,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 07-11-2014
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 subroutine condinit
@@ -50,7 +50,6 @@ subroutine condinit
   Az = 0.d0
 
   if (direction == "x") then
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(dist)
      do j = ju1, ju2
         do i = iu1, iu2
@@ -64,7 +63,6 @@ subroutine condinit
      end do
      !$OMP END PARALLEL DO
   else if (direction == "y") then
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(dist)
      do k = ku1, ku2
         do j = ju1, ju2
@@ -78,7 +76,6 @@ subroutine condinit
      end do
      !$OMP END PARALLEL DO
   else
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(dist)
      do i = iu1, iu2
         do k = ku1, ku2
@@ -94,7 +91,6 @@ subroutine condinit
   endif
 
   if (direction == "x") then
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME)
      do k = ku1, ku2
         do j = ju1, ju2
@@ -115,7 +111,6 @@ subroutine condinit
      enddo
      !$OMP END PARALLEL DO
   else if (direction == "y") then
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME)
      do k = ku1, ku2
         do j = ju1, ju2
@@ -136,7 +131,6 @@ subroutine condinit
      end do
      !$OMP END PARALLEL DO
   else
-     !$acc kernels loop
      !$OMP PARALLEL DO SCHEDULE(RUNTIME)
      do k = ku1, ku2
         do j = ju1, ju2
