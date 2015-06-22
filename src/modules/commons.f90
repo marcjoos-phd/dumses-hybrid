@@ -17,7 +17,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 05-21-2015
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 !> Precision module; define single and double precisions
@@ -144,7 +144,7 @@ module params
   real(dp) :: zmax              !< maximum z coordinate
   real(dp) :: Omega0=0.d0       !< angular velocity
   real(dp) :: ciso=0.d0         !< isothermal sound speed
-  real(dp) :: gamma=1.0001d0    !< ratio of specific heats \f$ \gamma \f$
+  real(dp) :: gamma=5.d0/3.d0   !< ratio of specific heats \f$ \gamma \f$
   logical  :: rhs=.false.       !< .true. if there is a non-zero source term
    
   ! Mesh parameters

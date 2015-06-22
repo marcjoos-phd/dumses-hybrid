@@ -16,7 +16,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 05-21-2015
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 !> Initialize parameters, calling read_input(); allocate arrays, calling allocate_workspace()
@@ -68,7 +68,7 @@ subroutine init_param
   call allocate_workspace
   !$OMP PARALLEL WORKSHARE
   uin    = zero
-  qin      = zero; emfx         = zero
+  qin    = zero; emfx         = zero
   gravin = zero; emfy         = zero
   flux   = zero; emfz         = zero
   dv     = zero; ds           = zero
@@ -283,7 +283,7 @@ subroutine default_parameters(restart, tlim, verbose, debug, bdtypex, bdtypey &
   zmin = 0.d0  ; zmax = 1.d0
   ciso   = 0.d0
   Omega0 = 0.d0
-  gamma  = 1.001d0
+  gamma  = 5.d0/3.d0
   nu     = 0.d0
   eta    = 0.d0
 
