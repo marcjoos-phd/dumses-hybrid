@@ -465,8 +465,8 @@ def plot2d(data, var='rho', xpos=None, ypos=None, zpos=0 \
             ax[i].set_yticks(())
             rtile = np.ones(ydim)
             ttile = np.ones(xdim)
-            r     = np.linspace(extent[2], extent[3], xdim)
-            theta = np.linspace(extent[0], extent[1], ydim)
+            r     = np.linspace(extent[0], extent[1], xdim)
+            theta = np.linspace(extent[2], extent[3], ydim)
             r     = r[:, np.newaxis]*rtile
             theta = theta*ttile[:, np.newaxis]
             xp    = r*np.cos(theta)
