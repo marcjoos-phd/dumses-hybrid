@@ -724,7 +724,8 @@ class File:
         if self.overwrite:
             if os.path.isfile(self.oname):
                 if not filecmp.cmp(self.tname, self.oname):
-                    os.remove(self.oname)
+                    if not self.markedForSolver:
+                        os.remove(self.oname)
                     shutil.move(self.tname, self.fname)
                 else:
                     os.remove(self.tname)

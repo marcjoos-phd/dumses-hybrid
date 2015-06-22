@@ -18,7 +18,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 05-26-2015
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 !> Compute primitive variables
@@ -1985,12 +1985,17 @@ subroutine update(fgodunov_pre)
 #endif
               enddo
               
-              if (Omega0 == zero) then
+#if GEOM == CARTESIAN
+              if (Omega0 == 0) then
+#endif
                  uin(i,j,k,iu) = uin(i,j,k,iu) + fgodunov_pre(i,j,k,1)*dvloc
 #if NDIM > 1
                  uin(i,j,k,iv) = uin(i,j,k,iv) + fgodunov_pre(i,j,k,2)*dvloc
 #endif
+#if GEOM == CARTESIAN
               endif
+#endif
+
               
 #if NDIM > 2 
               uin(i,j,k,iw) = uin(i,j,k,iw) + fgodunov_pre(i,j,k,3)*dvloc
