@@ -5,5 +5,8 @@
 *.pyc
 ./tmp
 Makefile
+*.pdf
 *.log
 log.*
+*.aux
+*#*

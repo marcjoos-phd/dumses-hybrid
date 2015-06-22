@@ -10,7 +10,7 @@
 % <http://www.gnu.org/licenses/>
 % date:
 % created:       05-29-2015
-% last modified: 06-19-2015
+% last modified: 06-22-2015
 %===============================================================================
 \documentclass[a4paper,12pt]{article}
 \usepackage[utf8]{inputenc}
@@ -18,10 +18,7 @@
 \usepackage[english]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{fullpage}
 \usepackage{graphicx}
-\usepackage{subfigure}
-\usepackage{multirow}
 \usepackage[svgnames]{xcolor}
 
 %% Check if Minted is available on the machine. If not, load verbatim instead
@@ -60,7 +57,7 @@
     \endminted%
 }%
 \else
-    \newenvironment{codeblock}[2][]{\verbatim}{\endverbatim}
+    \newenvironment{codeblock}[2][]{\small\verbatim}{\endverbatim}
 \fi
 
 %% Change section, subsection etc. layout
@@ -80,6 +77,16 @@
              {1.5ex \@plus .2ex}%
              {\normalfont\normalsize\sffamily\bfseries}}
 \makeatother
+
+%% Change page layout - stolen from fullpage.sty by H.Partl
+\topmargin 0pt
+\advance \topmargin by -\headheight
+\advance \topmargin by -\headsep
+\textheight 9.5in
+\oddsidemargin 0pt
+\evensidemargin \oddsidemargin
+\marginparwidth 0.5in
+\textwidth 6.5in
 
 \author{Marc \textsc{Joos} \& S\'ebastien \textsc{Fromang}}
 \title{\textsc{Dumses}-Hybrid \\ Manual}
@@ -432,6 +439,85 @@ Here are the different arguments that you can pass to the test script:
   }
 \end{table}
 
+\section{Develop in \textsc{Dumses}-Hybrid}
+
+\subsection{Create your own problem}
+
+If you intend to develop in \textsc{Dumses}-Hybrid and create your own problem, you can add it in \texttt{src/problem}.
+
+By default, here is the list of files you can safely modify:
+\begin{itemize}
+  \item all the files in \texttt{src/userfiles}, including \texttt{user\_init.f90}, \texttt{boundana.f90}, \texttt{source\_term.f90}, and \texttt{user\_restart.f90}.
+  \item \texttt{condinit.f90}, that should contains your initial conditions.
+\end{itemize}
+
+You can then copy these files in your own problem and modify them to adapt \textsc{Dumses}-Hybrid to your problem. All other modifications are done at your own risk.
+
+By default, all the computation done in this source files is done on the host side if you are running the OpenACC version of \textsc{Dumses}-Hybrid. It can be modified and computed on the device side at your own risk. Keep in mind that, for current version of OpenACC (as of 2015), you can't call subroutines in a parallelized loop.
+
+You can also modify these files without taking care of OpenMP; the code will run, but this part of the code will be executed sequentially. In most cases, you can parallize it easily adding:
+
+\begin{codeblock}{fortran}
+  !$OMP PARALLEL DO SCHEDULE(RUNTIME) [PRIVATE(...)]
+  ! your do-loop here
+  !$OMP PARALLEL END DO
+\end{codeblock}
+around the loops you intend to parallelize.
+
+\subsection{Good practices}
+
+\subsubsection{Floating point precision}
+
+Even if you declare all your floating point variable as:
+
+\begin{codeblock}{fortran}
+  real(dp) :: variable
+\end{codeblock}
+please avoid the following:
+
+\begin{codeblock}{fortran}
+  variable = 1.001
+\end{codeblock}
+and always prefer:
+
+\begin{codeblock}{fortran}
+  variable = 1.001d0
+\end{codeblock}
+
+Fortran is assigning variables from the right-hand side to the left; therefore, it will first evaluate the right-hand side of the equivalence, store its value in single precision, then assign it to \texttt{variable}, check its precision, and promote it in double precision. But in the promotion, since the right-hand side of the equality was in single precision, \texttt{variable} will be completed with garbage. That is why you should always specify \texttt{d0} if you want to keep things clean in double precision.
+
+\subsubsection{Document your files and subroutines}
+
+Please put a header of the given form in any new file you add in the code:
+
+\begin{codeblock}{fortran}
+!===============================================================================
+!> \file [filename]
+!! \brief
+!! \b DUMSES-Hybrid:
+!! [short explanation of what the subroutines in this file do]
+!! \author
+!! [you], Marc Joos <marc.joos@cea.fr>, Sebastien Fromang, Romain Teyssier, 
+!! Patrick Hennebelle
+!! \copyright
+!! Copyrights 2013-2015, CEA.
+!! This file is distributed under the CeCILL-A & GNU/GPL licenses, see
+!! <http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html> and
+!! <http://www.gnu.org/licenses/>
+!! \date
+!! \b created:          [date of creation]
+!! \b last \b modified: [date of modification]
+!<
+!===============================================================================
+\end{codeblock}
+This will be used by Doxygen do generate the code documentation. You can also document every subroutine in the code with the following:
+
+\begin{codeblock}{fortran}
+!===============================================================================
+!> Document your subroutine here.
+!===============================================================================
+\end{codeblock}
+
 \section{Convert output format}
 
 \textsc{Dumses}-Hybrid is distributed with \textsc{Merco}, that can be found in \texttt{utils/merco/}. \textsc{Merco} is a tool to \textsc{Mer}ge and \textsc{co}nvert \textsc{Dumses} outputs. \textsc{Merco} can be used to convert any \textsc{Dumses} output file from any format (Fortran binary, HDF5, parallel HDF5, parallel NetCDF), \emph{including outputs from \texttt{dumses\_mpi}}, into any other format. It is parallelized with MPI.
@@ -441,7 +527,6 @@ Here are the different arguments that you can pass to the test script:
 \textsc{Merco} comes with a configuration script in Python, as \textsc{Dumses}.
 
 Here is the list of arguments taken by \texttt{configure}:
-\clearpage
 \begin{table}[h!]
   \centering
   {\footnotesize
@@ -495,7 +580,6 @@ To help you find out the format of the output you want to convert, you can use t
 \subsection{Run the code -- input parameters}
 
 Here is the list of arguments you can pass either trough a namelist (\texttt{merco.in}) or interactively; if you use \textsc{Merco} in interactive mode, you just have to add a dash in front of the variable name to pass it as an argument to the executable:
-\clearpage
 
 \begin{table}[h!]
   \centering
