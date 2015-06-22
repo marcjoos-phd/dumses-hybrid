@@ -16,7 +16,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 09-22-2014
+!! \b last \b modified: 06-22-2015
 !<
 !===============================================================================
 !> Compute boundary conditions for each domain
@@ -127,7 +127,9 @@ subroutine innerx_boundary
      end do
      !$OMP END PARALLEL DO
   else if (boundary_type(1) == 'analytic') then
+     !$acc update host(uin)
      call xinner_ana
+     !$acc update device(uin)
   endif
 
   return
@@ -165,7 +167,9 @@ subroutine outerx_boundary
      end do
      !$OMP END PARALLEL DO
   else if (boundary_type(1) == 'analytic') then
+     !$acc update host(uin)
      call xouter_ana
+     !$acc update device(uin)
   endif
 
   return
@@ -204,7 +208,9 @@ subroutine innery_boundary
      end do
      !$OMP END PARALLEL DO
   else if (boundary_type(2) == 'analytic') then
+     !$acc update host(uin)
      call yinner_ana
+     !$acc update device(uin)
   endif
 
   return
@@ -242,7 +248,9 @@ subroutine outery_boundary
      end do
      !$OMP END PARALLEL DO
   else if (boundary_type(2) == 'analytic') then
+     !$acc update host(uin)
      call youter_ana
+     !$acc update device(uin)
   endif
 
   return
@@ -282,7 +290,9 @@ subroutine innerz_boundary
      end do
      !$OMP END PARALLEL DO
   else if (boundary_type(3) == 'analytic') then
+     !$acc update host(uin)
      call zinner_ana
+     !$acc update device(uin)
   endif
 
   return
@@ -320,7 +330,9 @@ subroutine outerz_boundary
      end do
      !$OMP END PARALLEL DO
   else if (boundary_type(3) == 'analytic') then
+     !$acc update host(uin)
      call zouter_ana
+     !$acc update device(uin)
   endif
 
   return
