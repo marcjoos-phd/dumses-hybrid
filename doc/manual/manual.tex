@@ -466,6 +466,34 @@ around the loops you intend to parallelize.
 
 \subsection{Good practices}
 
+\subsubsection{Create your \texttt{history.txt}}
+
+\texttt{dumpy} can automatically read the header (if provided) of your \texttt{history.txt} file; it is therefore recommanded to explicitely give the name of the variables your write in this file in a simple header. You can do something like (see \texttt{src/subroutines/history.f90}:
+
+\begin{codeblock}{fortran}
+header_format = "('# ', A11, 1X, 3(A14,1X))"
+hist_format = "(1X, 1PE12.5, 1X, 3(E14.5,1X))"
+if (mype == 0) then
+   ! If it is the first timestep, write a header
+   if (time == zero) then
+      open(unit=2, file=filename, status="unknown")
+      write(2, header_format) "time", "rho", "rhoux", "p"
+   else
+      inquire(file=filename, exist=fexist)
+      if (fexist) then
+         open(unit=2, file=filename, status="old", position="append")
+      else
+         ! If 'history.txt' does not exist yet, write a header
+         open(unit=2, file=filename, status="unknown")
+         write(2, header_format) "time", "rho", "rhoux", "p"
+      endif
+   endif
+   write(2, hist_format) time, uin(ipos,1,1,ir), uin(ipos,1,1,iu) &
+        , uin(ipos,1,1,ip)
+   close(2)
+endif
+\end{codeblock}
+
 \subsubsection{Floating point precision}
 
 Even if you declare all your floating point variable as:
@@ -527,6 +555,7 @@ This will be used by Doxygen do generate the code documentation. You can also do
 \textsc{Merco} comes with a configuration script in Python, as \textsc{Dumses}.
 
 Here is the list of arguments taken by \texttt{configure}:
+\clearpage
 \begin{table}[h!]
   \centering
   {\footnotesize
@@ -580,7 +609,7 @@ To help you find out the format of the output you want to convert, you can use t
 \subsection{Run the code -- input parameters}
 
 Here is the list of arguments you can pass either trough a namelist (\texttt{merco.in}) or interactively; if you use \textsc{Merco} in interactive mode, you just have to add a dash in front of the variable name to pass it as an argument to the executable:
-
+\clearpage
 \begin{table}[h!]
   \centering
   {\footnotesize

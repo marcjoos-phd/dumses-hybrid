@@ -463,14 +463,16 @@ def plot2d(data, var='rho', xpos=None, ypos=None, zpos=0 \
         if polar:
             ax[i].yaxis.set_ticks_position('none')
             ax[i].set_yticks(())
-            rtile = np.ones(ydim)
-            ttile = np.ones(xdim)
-            r     = np.linspace(extent[0], extent[1], xdim)
-            theta = np.linspace(extent[2], extent[3], ydim)
-            r     = r[:, np.newaxis]*rtile
-            theta = theta*ttile[:, np.newaxis]
-            xp    = r*np.cos(theta)
-            yp    = r*np.sin(theta)
+            rtile  = np.ones(ydim)
+            ttile  = np.ones(xdim)
+            dtheta = (extent[3] - extent[2])/ydim
+            r      = np.linspace(extent[0], extent[1], xdim)
+            theta  = np.linspace(extent[2] - dtheta/2., extent[3] + dtheta/2. \
+                                    , ydim)
+            r      = r[:, np.newaxis]*rtile
+            theta  = theta*ttile[:, np.newaxis]
+            xp     = r*np.cos(theta)
+            yp     = r*np.sin(theta)
         # if in logscale, hatched negative regions
         if log:
             if polar:
