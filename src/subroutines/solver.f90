@@ -18,7 +18,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 05-04-2015
+!! \b last \b modified: 06-24-2015
 !<
 !===============================================================================
 !> Riemann solver:
@@ -43,7 +43,7 @@ subroutine riemann(qm, qp, fgodunov, fgodunov_pre)
   real(dp) :: rl, pl, ul, vl, wl, cl, bl, al
   real(dp) :: rr, pr, ur, vr, wr, cr, br, ar
   real(dp) :: ro, uo, vo, wo, bo, co, ptoto, pressure
-  real(dp) :: cotanxc, shear, Ekin, Emag, Etot
+  real(dp) :: cotanxc, shear, xL, Ekin, Emag, Etot
   integer  :: i, j, k, idim, im, jm, km, ii, ji, ki, ioffset, joffset, koffset
   integer  :: ln, lt1, lt2, bn, bt1, bt2, ihip, jhip, khip
   integer  :: ilo, ihi, jlo, jhi, klo, khi
@@ -318,6 +318,21 @@ subroutine riemann(qm, qp, fgodunov, fgodunov_pre)
      endif
 #endif
   enddo
+
+#if GEOM == CYLINDRICAL
+  !$acc kernels loop
+  !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(xL)
+  do i = ilo, ihi
+     xL = half*(x(i) + x(i-1))
+     fgodunov(i,:,:,lt1,1) = fgodunov(i,:,:,lt1,1) &
+          & + rgstar(i,:,:)*ugstar(i,:,:)*Omega0*xL
+     fgodunov(i,:,:,ln,2)  = fgodunov(i,:,:,ln,2) &
+          & + rgstar(i,:,:)*ugstar(i,:,:)*Omega0*x(i)
+     fgodunov(i,:,:,lt2,3) = fgodunov(i,:,:,lt2,3) &
+          & + rgstar(i,:,:)*ugstar(i,:,:)*Omega0*x(i)
+  enddo
+  !$OMP END PARALLEL DO
+#endif
 
   !$acc end data
 
