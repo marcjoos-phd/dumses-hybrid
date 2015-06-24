@@ -16,7 +16,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 06-22-2015
+!! \b last \b modified: 06-24-2015
 !<
 !===============================================================================
 !> Initialize parameters, calling read_input(); allocate arrays, calling allocate_workspace()
@@ -32,8 +32,8 @@ subroutine init_param
   call read_input(restart, tlim, verbose, debug, bdtypex, bdtypey, bdtypez &
      & , boundary_type, iriemann, iriemann2d, slope_type, courant, fargo &
      & , nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, Omega0, ciso, gamma &
-     & , nu, eta, dtdump, dthist, io_type, nxslice, nyslice, nzslice &
-     & , nxglob, nyglob, nzglob)
+     & , nu, eta, rhs, dtdump, dthist, dtspec, io_type, nxslice, nyslice &
+     & , nzslice, nxglob, nyglob, nzglob)
 
   !calculate state vector sizes
   iu1 = 1-nghost; iu2 = nx+nghost
@@ -130,8 +130,8 @@ end subroutine init
 subroutine read_input(restart, tlim, verbose, debug, bdtypex, bdtypey, bdtypez &
      & , boundary_type, iriemann, iriemann2d, slope_type, courant, fargo &
      & , nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, Omega0, ciso, gamma &
-     & , nu, eta, dtdump, dthist, io_type, nxslice, nyslice, nzslice &
-     & , nxglob, nyglob, nzglob)
+     & , nu, eta, rhs, dtdump, dthist, dtspec, io_type, nxslice, nyslice &
+     & , nzslice, nxglob, nyglob, nzglob)
   use mpi_var
   use const
   implicit none
@@ -139,8 +139,8 @@ subroutine read_input(restart, tlim, verbose, debug, bdtypex, bdtypey, bdtypez &
   integer, intent(out)  :: restart
   real(dp), intent(out) :: tlim, courant, xmin, xmax, ymin, ymax, zmin, zmax
   real(dp), intent(out) :: Omega0, ciso, gamma, nu, eta
-  real(dp), intent(out) :: dtdump, dthist
-  logical, intent(out)  :: verbose, debug, fargo
+  real(dp), intent(out) :: dtdump, dthist, dtspec
+  logical, intent(out)  :: verbose, debug, fargo, rhs
   character(LEN=20)     :: bdtypex, bdtypey, bdtypez
   character(LEN=20), dimension(ndim), intent(out) :: boundary_type
   character(LEN=10)     :: riemann, riemann2d
@@ -157,14 +157,15 @@ subroutine read_input(restart, tlim, verbose, debug, bdtypex, bdtypey, bdtypez &
   namelist /scheme_params/ bdtypex, bdtypey, bdtypez, riemann, riemann2d &
                          & , slope_type, courant, fargo
   namelist /model_params/  nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax &
-                         & , Omega0, ciso, gamma, nu, eta
-  namelist /output_params/ dtdump, dthist, io_type
+                         & , Omega0, ciso, gamma, nu, eta, rhs
+  namelist /output_params/ dtdump, dthist, dtspec, io_type
   namelist /mpi_params/    nxslice, nyslice, nzslice
 
   call default_parameters(restart, tlim, verbose, debug, bdtypex, bdtypey &
      & , bdtypez, riemann, riemann2d, slope_type, courant, fargo &
      & , nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, Omega0, ciso, gamma &
-     & , nu, eta, dtdump, dthist, io_type, nxslice, nyslice, nzslice)
+     & , nu, eta, rhs, dtdump, dthist, dtspec, io_type, nxslice, nyslice &
+     & , nzslice)
 
   open(unit=1, file='input', status='old')
   read(1, start_params)
@@ -219,20 +220,21 @@ subroutine read_input(restart, tlim, verbose, debug, bdtypex, bdtypey, bdtypez &
         open(unit=3, file=filename, status="old", position="append")
      else
         open(unit=3, file=filename, status="unknown")
-        write(3, "('# ', 32(A13,1X))") "restart", "tlim", "verbose", "debug" &
+        write(3, "('# ', 34(A13,1X))") "restart", "tlim", "verbose", "debug" &
              & , "bdtypex", "bdtypey", "bdtypez", "riemann", "riemann2d" &
              & , "slope_type", "courant", "fargo", "nx", "ny", "nz" &
              & , "xmin", "xmax", "ymin", "ymax", "zmin", "zmax", "Omega0" &
-             & , "ciso", "gamma", "nu", "eta", "dtdump", "dthist", "io_type" &
-             & , "nxslice", "nyslice", "nzslice"
+             & , "ciso", "gamma", "nu", "eta", "rhs", "dtdump", "dthist" &
+             & , "dtspec", "io_type", "nxslice", "nyslice", "nzslice"
      endif
      
      write(3, "(2X, I13, 1X, E13.5, 2(1X, L13), 5(1X, A13), 1X, I13, 1X, E13.5 &
-          & , 1X, L13, 3(1X, I13), 13(1X, E13.5), 1X, A13 &
-          & , 3(1X, I13))") restart, tlim, verbose, debug, bdtypex, bdtypey &
-          & , bdtypez, riemann, riemann2d, slope_type, courant, fargo &
+          & , 1X, L13, 3(1X, I13), 11(1X, E13.5), 1X, L13, 3(1X, E13.5) &
+          & , 1X, A13, 3(1X, I13))") restart, tlim, verbose, debug, bdtypex &
+          & , bdtypey, bdtypez, riemann, riemann2d, slope_type, courant, fargo &
           & , nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, Omega0, ciso &
-          & , gamma, nu, eta, dtdump, dthist, io_type, nxslice, nyslice, nzslice
+          & , gamma, nu, eta, rhs, dtdump, dthist, dtspec, io_type, nxslice &
+          & , nyslice, nzslice
      
      close(3)
   endif
@@ -245,15 +247,16 @@ end subroutine read_input
 subroutine default_parameters(restart, tlim, verbose, debug, bdtypex, bdtypey &
      & , bdtypez, riemann, riemann2d, slope_type, courant, fargo &
      & , nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, Omega0, ciso, gamma &
-     & , nu, eta, dtdump, dthist, io_type, nxslice, nyslice, nzslice)
+     & , nu, eta, rhs, dtdump, dthist, dtspec, io_type, nxslice, nyslice &
+     & , nzslice)
   use const
   implicit none
 
   integer, intent(out)  :: restart
   real(dp), intent(out) :: tlim, courant, xmin, xmax, ymin, ymax, zmin, zmax
   real(dp), intent(out) :: Omega0, ciso, gamma, nu, eta
-  real(dp), intent(out) :: dtdump, dthist
-  logical, intent(out)  :: verbose, debug, fargo
+  real(dp), intent(out) :: dtdump, dthist, dtspec
+  logical, intent(out)  :: verbose, debug, fargo, rhs
   character(LEN=20), intent(out) :: bdtypex, bdtypey, bdtypez
   character(LEN=10), intent(out) :: riemann, riemann2d
   character(LEN=10), intent(out) :: io_type
@@ -288,10 +291,12 @@ subroutine default_parameters(restart, tlim, verbose, debug, bdtypex, bdtypey &
   gamma  = 5.d0/3.d0
   nu     = 0.d0
   eta    = 0.d0
+  rhs    = .false.
 
   tlim    = 1.d0
   dtdump  = -1.d0
   dthist  = -1.d0
+  dtspec  = -1.d0
   io_type = "binary"
 
   nxslice = 1; nyslice = 1; nzslice = 1

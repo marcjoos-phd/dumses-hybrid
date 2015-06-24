@@ -13,7 +13,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 06-22-2015
+!! \b last \b modified: 06-24-2015
 !<
 !===============================================================================
 !>
@@ -45,7 +45,7 @@ program dumses
   use mpi_var
   implicit none
 
-  real(dp) :: thist, tdump
+  real(dp) :: thist, tdump, tspec
 
   ! Timing variables
   real(dp) :: tcpu0, tcpu1, cputime, elptime
@@ -54,6 +54,7 @@ program dumses
   logical  :: inter
 
   ndump = 0
+  nspec = 0
   inter = .true.
 
   call init_parallel
@@ -68,7 +69,7 @@ program dumses
      ndump = ndump + 1
      call history
   endif
-  thist = time; tdump = time
+  thist = time; tdump = time; tspec = time
   
   ! CPU time
   call cpu_time(tcpug0)
@@ -121,6 +122,9 @@ program dumses
         !$acc update host(uin)
         call history
         thist = thist + dthist
+        call special
+        nspec = nspec + 1
+        tspec = tspec + dtspec
         call output
         ndump = ndump + 1
         tdump = tdump + dtdump
@@ -135,6 +139,12 @@ program dumses
            call output
            ndump = ndump + 1
            tdump = tdump + dtdump
+        endif
+        if (((time - dt) <= (tspec + dtspec)) .and. (time > (tspec + dtspec))) then
+           !$acc update host(uin)
+           call special
+           nspec = nspec + 1
+           tspec = tspec + dtspec
         endif
      endif
 

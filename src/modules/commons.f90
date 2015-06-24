@@ -17,7 +17,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 06-22-2015
+!! \b last \b modified: 06-24-2015
 !<
 !===============================================================================
 !> Precision module; define single and double precisions
@@ -155,6 +155,7 @@ module params
   ! Output parameters
   real(dp) :: dtdump           !< elapsed time between two outputs
   real(dp) :: dthist           !< elapsed time between two history
+  real(dp) :: dtspec           !< elapsed time between two special
   character(LEN=10) :: io_type !< output format type
 
   ! MPI parameters
@@ -209,6 +210,7 @@ module variables
 
   ! Output variables
   integer :: ndump !< # of the current output
+  integer :: nspec !< # of the current special
 
 end module variables
 !===============================================================================

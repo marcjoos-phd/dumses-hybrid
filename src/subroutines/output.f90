@@ -4,8 +4,7 @@
 !! \b DUMSES-Hybrid:
 !! This is output subroutines.
 !! \details
-!! Contains output(), dump_1d_real(), dump_1d_int(), dump_2d_real(), 
-!! dump_3d_real()
+!! Contains output()
 !! \author
 !! Marc Joos <marc.joos@cea.fr>, Sébastien Fromang, Pierre Kestener, 
 !! Romain Teyssier, Patrick Hennebelle

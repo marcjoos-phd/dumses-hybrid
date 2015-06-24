@@ -15,7 +15,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          09-08-2014
-!! \b last \b modified: 04-02-2015
+!! \b last \b modified: 06-24-2015
 !<
 !===============================================================================
 !> User initialization
@@ -23,9 +23,6 @@
 subroutine user_init
   use params
   implicit none
-
-  ! Set rhs variables (.true. when there are source terms)
-  rhs = .false.
 
   return
 end subroutine user_init
