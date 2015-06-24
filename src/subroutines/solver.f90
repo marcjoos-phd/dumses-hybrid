@@ -320,6 +320,7 @@ subroutine riemann(qm, qp, fgodunov, fgodunov_pre)
   enddo
 
 #if GEOM == CYLINDRICAL
+  ! Account for initertial frame
   !$acc kernels loop
   !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(xL)
   do i = ilo, ihi

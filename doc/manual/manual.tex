@@ -10,7 +10,7 @@
 % <http://www.gnu.org/licenses/>
 % date:
 % created:       05-29-2015
-% last modified: 06-22-2015
+% last modified: 06-24-2015
 %===============================================================================
 \documentclass[a4paper,12pt]{article}
 \usepackage[utf8]{inputenc}
@@ -62,7 +62,7 @@
 
 %% Change section, subsection etc. layout
 \makeatletter
-\renewcommand{\section}{\@startsection {section}{1}{\z@}%
+\renewcommand{\section}{\clearpage\@startsection {section}{1}{\z@}%
              {-3.5ex \@plus -1ex \@minus -.2ex}%
              {2.3ex \@plus .2ex}%
              {\normalfont\Large\sffamily\bfseries}}
@@ -93,7 +93,7 @@
 \date{ }
 
 \begin{document}    
-\vspace*{-9em}
+\vspace*{.5\textwidth}
         {\let\newpage\relax\maketitle}
 
 \section{Configuration}
@@ -264,6 +264,7 @@ The input parameters have to be given though a Fortran namelist named \texttt{in
     \hline
     \texttt{dtdump} & \texttt{real} & elapsed time between two outputs & \texttt{-1.d0} \\
     \texttt{dthist} & \texttt{real} & elapsed time between two history & \texttt{-1.d0} \\
+    \texttt{dtspec} & \texttt{real} & elapsed time between two special & \texttt{-1.d0} \\
     \texttt{io\_type} & \texttt{character} & output format type, in [\texttt{'binary'}, \texttt{'hdf5'}, \texttt{'phdf5'}, \texttt{'pnetcdf'}] & \texttt{'binary'} \\
     \hline
     \multicolumn{4}{c}{\normalsize \bfseries MPI parameters} \\
@@ -445,10 +446,14 @@ Here are the different arguments that you can pass to the test script:
 
 If you intend to develop in \textsc{Dumses}-Hybrid and create your own problem, you can add it in \texttt{src/problem}.
 
-By default, here is the list of files you can safely modify:
+By default, the files you can safely modify are the ones in \texttt{src/userfiles}. It includes:
 \begin{itemize}
-  \item all the files in \texttt{src/userfiles}, including \texttt{user\_init.f90}, \texttt{boundana.f90}, \texttt{source\_term.f90}, and \texttt{user\_restart.f90}.
-  \item \texttt{condinit.f90}, that should contains your initial conditions.
+  \item \texttt{condinit.f90} for your initial conditions; you can't launch a simulation without creating this file in your problem.
+  \item \texttt{user\_init.f90} to define additional specific initialization.
+  \item \texttt{boundana.f90} for analytical boundary conditions.
+  \item \texttt{source\_term.f90} for additional source terms.
+  \item \texttt{user\_restart.f90} for customized restart.
+  \item \texttt{special.f90} for customized outputs, with a different frequency of the usual outputs and history.
 \end{itemize}
 
 You can then copy these files in your own problem and modify them to adapt \textsc{Dumses}-Hybrid to your problem. All other modifications are done at your own risk.
@@ -555,7 +560,6 @@ This will be used by Doxygen do generate the code documentation. You can also do
 \textsc{Merco} comes with a configuration script in Python, as \textsc{Dumses}.
 
 Here is the list of arguments taken by \texttt{configure}:
-\clearpage
 \begin{table}[h!]
   \centering
   {\footnotesize
@@ -609,7 +613,6 @@ To help you find out the format of the output you want to convert, you can use t
 \subsection{Run the code -- input parameters}
 
 Here is the list of arguments you can pass either trough a namelist (\texttt{merco.in}) or interactively; if you use \textsc{Merco} in interactive mode, you just have to add a dash in front of the variable name to pass it as an argument to the executable:
-\clearpage
 \begin{table}[h!]
   \centering
   {\footnotesize
