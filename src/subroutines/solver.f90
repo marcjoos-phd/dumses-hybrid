@@ -18,7 +18,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 06-24-2015
+!! \b last \b modified: 06-25-2015
 !<
 !===============================================================================
 !> Riemann solver:
@@ -254,6 +254,24 @@ subroutine riemann(qm, qp, fgodunov, fgodunov_pre)
         enddo
         !$OMP END PARALLEL DO
      endif
+
+     ! Account for initertial frame
+     !$acc kernels loop
+     !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(xL)
+     do k = klo , khi
+        do j = jlo , jhi
+           do i = ilo, ihi
+              xL = half*(x(i) + x(i-1))
+              if (idim == 1) fgodunov(i,j,k,5,1) = fgodunov(i,j,k,5,1) &
+                   & + rgstar(i,j,k)*ugstar(i,j,k)*Omega0*xL
+              if (idim == 2) fgodunov(i,j,k,3,2)  = fgodunov(i,j,k,3,2) &
+                   & + rgstar(i,j,k)*ugstar(i,j,k)*Omega0*x(i)
+              if (idim == 3) fgodunov(i,j,k,7,3) = fgodunov(i,j,k,7,3) &
+                   & + rgstar(i,j,k)*ugstar(i,j,k)*Omega0*x(i)
+           enddo
+        enddo
+     enddo
+     !$OMP END PARALLEL DO
 #endif
 
 #if GEOM == SPHERICAL
@@ -318,22 +336,6 @@ subroutine riemann(qm, qp, fgodunov, fgodunov_pre)
      endif
 #endif
   enddo
-
-#if GEOM == CYLINDRICAL
-  ! Account for initertial frame
-  !$acc kernels loop
-  !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(xL)
-  do i = ilo, ihi
-     xL = half*(x(i) + x(i-1))
-     fgodunov(i,:,:,lt1,1) = fgodunov(i,:,:,lt1,1) &
-          & + rgstar(i,:,:)*ugstar(i,:,:)*Omega0*xL
-     fgodunov(i,:,:,ln,2)  = fgodunov(i,:,:,ln,2) &
-          & + rgstar(i,:,:)*ugstar(i,:,:)*Omega0*x(i)
-     fgodunov(i,:,:,lt2,3) = fgodunov(i,:,:,lt2,3) &
-          & + rgstar(i,:,:)*ugstar(i,:,:)*Omega0*x(i)
-  enddo
-  !$OMP END PARALLEL DO
-#endif
 
   !$acc end data
 

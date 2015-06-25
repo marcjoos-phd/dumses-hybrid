@@ -15,7 +15,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          03-25-2015 
-!! \b last \b modified: 06-22-2015
+!! \b last \b modified: 06-24-2015
 !<
 !===============================================================================
 !> Compute source term
@@ -65,6 +65,7 @@ subroutine gravity_predictor(v, igrav, jgrav, kgrav)
   klo = min(1,ku1+1); khi = max(1,ku2-1)
 
   ! v = v + 1/2*gravin*dt
+  !$acc kernels loop
   !$OMP PARALLEL DO SCHEDULE(RUNTIME)
   do k = klo, khi
      do j = jlo, jhi

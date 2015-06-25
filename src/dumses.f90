@@ -107,13 +107,13 @@ program dumses
      if ((nu > zero) .or. (eta > zero)) call dissipation
      !$py end_timing Dissipation processes
 
-     if (mype == 0) print '("Time/dt: ", E14.8, ", ", E14.8)', time, dt
+     if (mype == 0) print '("Time/dt: ", 1PE14.8, ", ", 1PE14.8)', time, dt
   
      if (inter) then
         if (mype == 0) then
            call cpu_time(tcpu1)
            cputime = tcpu1 - tcpu0
-           print '("CPU time required (per timestep): ", E12.6E2)', cputime
+           print '("CPU time required (per timestep): ", 1PE12.6E2)', cputime
         endif
      endif
   
