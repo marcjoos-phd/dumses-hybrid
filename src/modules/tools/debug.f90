@@ -15,7 +15,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          12-17-2013 
-!! \b last \b modified: 12-15-2014
+!! \b last \b modified: 06-25-2015
 !<
 !===============================================================================
 !> Debugging module; tools to debug the application
@@ -59,7 +59,7 @@ module debugtools
 
 #if PHDF5 == 1 && MPI == 1
          if (io_type .eq. 'phdf5') then
-            call get_filename(ndump, 0, trim(filename), openedfile)
+            call get_filename('output', ndump, 0, trim(filename), openedfile)
             openedfile = trim(openedfile)//'.h5'
             call H5open_f(ierr)
 
@@ -85,7 +85,7 @@ module debugtools
             endif
          else
 #endif
-            call get_filename(ndump, mype, trim(filename), openedfile)
+            call get_filename('output', ndump, mype, trim(filename), openedfile)
             call H5open_f(ierr)
 
             inquire(file=openedfile, exist=fexists)
