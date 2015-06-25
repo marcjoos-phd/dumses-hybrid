@@ -10,7 +10,7 @@
 % <http://www.gnu.org/licenses/>
 % date:
 % created:       05-29-2015
-% last modified: 06-24-2015
+% last modified: 06-25-2015
 %===============================================================================
 \documentclass[a4paper,12pt]{article}
 \usepackage[utf8]{inputenc}
@@ -458,7 +458,7 @@ By default, the files you can safely modify are the ones in \texttt{src/userfile
 
 You can then copy these files in your own problem and modify them to adapt \textsc{Dumses}-Hybrid to your problem. All other modifications are done at your own risk.
 
-By default, all the computation done in this source files is done on the host side if you are running the OpenACC version of \textsc{Dumses}-Hybrid. It can be modified and computed on the device side at your own risk. Keep in mind that, for current version of OpenACC (as of 2015), you can't call subroutines in a parallelized loop.
+By default, all the computation done in this source files is done on the host side if you are running the OpenACC version of \textsc{Dumses}-Hybrid. It can be modified and computed on the device side at your own risk. For an example of how you can do it, you can look at \texttt{stratified/} problem, where both the source terms and the analytical boundary conditions are done on the GPU. If you attend to parallelized your own routines with OpenACC, keep in mind that, for current version of OpenACC (as of 2015), you can't call subroutines in a parallelized loop.
 
 You can also modify these files without taking care of OpenMP; the code will run, but this part of the code will be executed sequentially. In most cases, you can parallize it easily adding:
 
