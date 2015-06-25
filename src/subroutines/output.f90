@@ -15,7 +15,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 03-27-2015
+!! \b last \b modified: 06-25-2015
 !<
 !===============================================================================
 !> \brief
@@ -78,7 +78,7 @@ subroutine output
 
      call H5open_f(ierr)
      if (io_type == 'phdf5') then
-        call get_filename(ndump, 0, 'data', filename)
+        call get_filename('output', ndump, 0, 'data', filename)
         filename = trim(filename)//'.h5'
         if (mype == 0) then
            call H5Fcreate_f(filename, H5F_ACC_TRUNC_F, file_id, ierr)
@@ -96,7 +96,7 @@ subroutine output
         call MPI_Barrier(MPI_COMM_WORLD, ierr)
 #endif
      else
-        call get_filename(ndump, mype, 'data', filename)
+        call get_filename('output', ndump, mype, 'data', filename)
         filename = trim(filename)//'.h5'
         call H5Fcreate_f(filename, H5F_ACC_TRUNC_F, file_id, ierr)
         
@@ -145,7 +145,7 @@ subroutine output
 #endif
 #if PNCDF == 1 && MPI == 1
   if (io_type == 'pnetcdf') then
-     call get_filename(ndump, 0, 'data', filename)
+     call get_filename('output', ndump, 0, 'data', filename)
      filename = trim(filename)//'.nc'
 
      nout = nfmpi_create(MPI_COMM_WORLD, trim(filename) &
@@ -227,7 +227,7 @@ subroutine output
 #endif
 
   if (io_type == 'binary') then
-     call get_filename(ndump, mype, 'data', filename)
+     call get_filename('output', ndump, mype, 'data', filename)
      filename = trim(filename)//'.bin'
      
      open(unit=10, file=trim(filename), status='unknown', form='unformatted')

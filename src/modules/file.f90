@@ -15,7 +15,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          12-15-2014 
-!! \b last \b modified: 12-15-2014
+!! \b last \b modified: 06-25-2015
 !<
 !===============================================================================
 module file
@@ -24,7 +24,7 @@ contains
 !===============================================================================
 !> Get \c filename (to write) from process rank and number of the output
 !===============================================================================
-  subroutine get_filename(ndump, mype, prefix, filename)
+  subroutine get_filename(dirname, ndump, mype, prefix, filename)
 #if MPI == 1
     use mpi
 #endif
@@ -32,14 +32,14 @@ contains
   
     integer, intent(in) :: ndump, mype
     character(LEN=6)    :: snumdir, snumfile
-    character(LEN=*), intent(in)   :: prefix
+    character(LEN=*), intent(in)   :: dirname, prefix
     character(LEN=80), intent(out) :: filename
     character(LEN=80)   :: filedir, filecmd
     integer :: ierr
   
     call convtoasc(ndump, snumdir)
     call convtoasc(mype, snumfile)
-    filedir  = 'output_'//trim(snumdir)//'/'
+    filedir  = trim(dirname)//'_'//trim(snumdir)//'/'
     filecmd  = 'mkdir -p '//trim(filedir)
     filename = trim(filedir)//trim(prefix)//'.'//trim(snumfile)
   
