@@ -26,13 +26,16 @@ module debugtools
   use hdf5
   use write_h5
 #endif
+#if PNCDF == 1
+  use pnetcdf
+#endif
 #if MPI == 1
   use mpi
 #endif
 
   contains
 !===============================================================================
-!> Write a debug file in HDF5
+!> Write a debug file in HDF5 or Parallel NetCDF
 !===============================================================================
     subroutine write_debug_file(ndump, filename, varname, array &
          , nxarr, nyarr, nzarr)
@@ -52,11 +55,21 @@ module debugtools
 #if HDF5 == 1 || PHDF5 == 1
       integer        :: ierr
       integer(hid_t) :: file_id, fapl_id
+#endif
 
-      if (verbose) print*, "> Entering write_debug_file"
+#if PNCDF == 1
+      integer :: nout, ncid, niid, piid, xdimid, ydimid, zdimid, varid
+      integer, dimension(3) :: sdimid
+      integer :: dimz
+      integer(dp) :: nbint, onedp=1
+      integer(kind=MPI_OFFSET_KIND) :: nxtot, nytot, nztot
+      integer(kind=MPI_OFFSET_KIND), dimension(3) :: dims, start, count
+#endif
+
+      !$py begin_statement
 
       if (io_type .eq. 'phdf5' .or. io_type .eq. 'hdf5') then
-
+#if HDF5 == 1 || PHDF5 == 1
 #if PHDF5 == 1 && MPI == 1
          if (io_type .eq. 'phdf5') then
             call get_filename('output', ndump, 0, trim(filename), openedfile)
@@ -109,8 +122,56 @@ module debugtools
 #endif
          call H5Fclose_f(file_id, ierr)
          call H5close_f(ierr)
-      endif
 #endif
+      else if (io_type == 'pnetcdf') then
+#if PNCDF == 1 && MPI == 1
+         call get_filename('output', ndump, 0, trim(filename), openedfile)
+         openedfile = trim(openedfile)//'.nc'
+
+         inquire(file=openedfile, exist=fexists)
+         call MPI_Barrier(MPI_COMM_WORLD, ierr)
+         if (fexists) then
+            nout = nfmpi_open(MPI_COMM_SELF, openedfile &
+                 & , ior(NF_NOWRITE, NF_64BIT_OFFSET), MPI_INFO_NULL, ncid)
+            nout = nfmpi_redef(ncid)
+         else
+            nout = nfmpi_create(MPI_COMM_WORLD, openedfile &
+                 & , ior(NF_WRITE, NF_64BIT_OFFSET), MPI_INFO_NULL, ncid)
+         endif
+
+         nbint = nb_int
+         nout  = nfmpi_def_dim(ncid, "nb_int", nbint, niid)
+         nout  = nfmpi_def_var(ncid, "meta_int", NF_INT, 1, (/niid/), piid)
+
+         nxtot = nxarr
+         nytot = nyarr
+         nztot = nzarr*nxslice*nyslice*nzslice
+         nout  = nfmpi_def_dim(ncid, "nx", nxtot, xdimid)
+         nout  = nfmpi_def_dim(ncid, "ny", nytot, ydimid)
+         nout  = nfmpi_def_dim(ncid, "nz", nztot, zdimid)
+         sdimid = (/ xdimid, ydimid, zdimid /)
+         nout  = nfmpi_def_var(ncid, varname, NF_DOUBLE, 3, sdimid, varid)
+
+         nout = nfmpi_enddef(ncid)
+
+         nout = nfmpi_begin_indep_data(ncid)
+         if (mype == 0) then
+            meta_int = (/ nxarr, nyarr, nzarr, nxslice, nyslice, nzslice /)
+            nout = nfmpi_put_vara_int(ncid, piid, (/onedp/), (/nbint/) &
+                 & , meta_int)
+         endif
+         nout = nfmpi_end_indep_data(ncid)
+
+         dims = (/ nxarr, nyarr, nzarr /)
+         dimz  = mype*dims(3)+1
+         start = (/ 1, 1, dimz /)
+         count = dims
+     
+         nout = nfmpi_put_vara_double_all(ncid, varid, start, count, array)
+         
+         nout = nfmpi_close(ncid)
+#endif
+      endif
 
       return
     end subroutine write_debug_file

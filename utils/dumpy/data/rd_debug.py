@@ -12,13 +12,14 @@
 # <http://www.gnu.org/licenses/>
 # \date
 # \b created:          06-03-2014 
-# \b last \b modified: 05-07-2015
+# \b last \b modified: 05-25-2015
 
 #===============================================================================
 import sys
 import tables
 import numpy as np
 import pylab as pl
+import netCDF4 as nc
 
 ## DUMSES debugging data class
 class DumsesDebug:
@@ -53,8 +54,8 @@ class DumsesDebug:
     # @param io_type type of I/O in (\c binary, \c hdf5, \c phdf5, \c pnetcdf)
     def load(self, idump = 1, filedebug='fgodunov', filedir='./', nghost=3 \
                  , io_type='phdf5'):
+        self.dir = filedir + "output_%06d/" %idump
         if io_type == 'phdf5':
-            self.dir = filedir + "output_%06d/" %idump
             self.filename = self.dir + filedebug + ".000000.h5"
 
             f = tables.openFile(self.filename)
@@ -80,37 +81,64 @@ class DumsesDebug:
                     tempdict[dset.name] = dset[:]
                     self.dict[dset.name] \
                         = np.zeros((nx*nxslice,ny*nyslice,nz*nzslice))
-                    
-            selx = [i + nghost for i in xrange(nx)]
-            sely = [i + nghost for i in xrange(ny)] if ny != 1 else [0]
-            selz = [i + nghost for i in xrange(nz)] if nz != 1 else [0]
+            f.close()
+        elif io_type == 'pnetcdf':
+            self.filename = self.dir + filedebug + ".000000.nc"
 
-            nxs = nx + 2*nghost
-            nys = ny + 2*nghost if ny != 1 else ny
-            nzs = nz + 2*nghost if nz != 1 else nz
+            f = nc.Dataset(self.filename)
 
-            for dset in tempdict.iterkeys():
-                tempdict[dset] = np.reshape(tempdict[dset] \
-                    , (nproc, nzs, nys, nxs))
-                tempdict[dset] = np.transpose(tempdict[dset], (0, 3, 2, 1))
+            meta_int = f.variables['meta_int'][:]
+            nx = meta_int[0]; nxslice = meta_int[3]
+            ny = meta_int[1]; nyslice = meta_int[4]
+            nz = meta_int[2]; nzslice = meta_int[5]
+            if nghost:
+                nx -= 2*nghost
+                if ny != 1:
+                    ny -= 2*nghost
+                if nz != 1:
+                    nz -= 2*nghost
+            nproc = nxslice*nyslice*nzslice
+            self.nx = nx; self.nxslice = nxslice
+            self.ny = ny; self.nyslice = nyslice
+            self.nz = nz; self.nzslice = nzslice
 
-            for n in xrange(nproc):
-                xpos = n%nxslice
-                ypos = n/(nxslice*nzslice)%nyslice
-                zpos = (n/nxslice)%nzslice
-
-                i0 = xpos*nx; i1 = (xpos + 1)*nx
-                j0 = ypos*ny; j1 = (ypos + 1)*ny
-                k0 = zpos*nz; k1 = (zpos + 1)*nz
-
-                for dset in tempdict.iterkeys():
-                    self.dict[dset][i0:i1,j0:j1,k0:k1] \
-                        = tempdict[dset][n][selx,:,:][:,sely,:][:,:,selz]
-
-            self.nvar = self.dict.__len__()
+            tempdict = {}
+            for dset in f.variables.iterkeys():
+                if dset.name != "meta_int":
+                    tempdict[dset] = f.variables[dset][:]
+                    self.dict[dset] \
+                        = np.zeros((nx*nxslice,ny*nyslice,nz*nzslice))
             f.close()
         else:
             raise NotImplementedError
+                    
+        selx = [i + nghost for i in xrange(nx)]
+        sely = [i + nghost for i in xrange(ny)] if ny != 1 else [0]
+        selz = [i + nghost for i in xrange(nz)] if nz != 1 else [0]
+
+        nxs = nx + 2*nghost
+        nys = ny + 2*nghost if ny != 1 else ny
+        nzs = nz + 2*nghost if nz != 1 else nz
+
+        for dset in tempdict.iterkeys():
+            tempdict[dset] = np.reshape(tempdict[dset] \
+                , (nproc, nzs, nys, nxs))
+            tempdict[dset] = np.transpose(tempdict[dset], (0, 3, 2, 1))
+
+        for n in xrange(nproc):
+            xpos = n%nxslice
+            ypos = n/(nxslice*nzslice)%nyslice
+            zpos = (n/nxslice)%nzslice
+
+            i0 = xpos*nx; i1 = (xpos + 1)*nx
+            j0 = ypos*ny; j1 = (ypos + 1)*ny
+            k0 = zpos*nz; k1 = (zpos + 1)*nz
+
+            for dset in tempdict.iterkeys():
+                self.dict[dset][i0:i1,j0:j1,k0:k1] \
+                    = tempdict[dset][n][selx,:,:][:,sely,:][:,:,selz]
+
+        self.nvar = self.dict.__len__()
 
     ## plot method for DUMSES debug data
     # @param var variable(s) to plot; can be a single string or a list of string. Default: \c None (plot all variables)
