@@ -1790,227 +1790,121 @@ subroutine update(fgodunov_pre)
   jhi = max(1, jf2 - 1)
   khi = max(1, kf2 - 1)
 
-#if OACC == 1
-  if (ndim_act == 2) then
-     !$acc kernels loop
-     !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(yc, radius, i0, j0, k0, dsx) &
-     !$OMP PRIVATE(dsy, dfn2, dfn3)
-     do k = 1, khi
-        do j = 1, jhi
-           yc = y(j)
-           !$acc loop private(radius)
-           do i = 1, ihi
-              radius = one
-              dvloc  = one/dv(i,j,k)
+  !$acc kernels loop
+  !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(yc, radius, i0, j0, k0, dsx) &
+  !$OMP PRIVATE(dsy, dfn2, dfn3)
+  do k = 1, khi
+#if NDIM != 2
+     !$acc loop vector(blocky_update)
+#endif
+     do j = 1, jhi
+        yc = y(j)
+#if NDIM != 2
+        !$acc loop private(radius) vector(blockx_update)
+#else
+        !$acc loop private(radius)
+#endif
+        do i = 1, ihi
+           radius = one
+           dvloc  = one/dv(i,j,k)
 #if GEOM == CYLINDRICAL || GEOM == SPHERICAL
-              radius(2,1:2,1:3) = x(i)
-              radius(2,1,1) = half*(x(i) + x(i-1))
-              radius(2,2,1) = half*(x(i) + x(i+1))
+           radius(2,1:2,1:3) = x(i)
+           radius(2,1,1) = half*(x(i) + x(i-1))
+           radius(2,2,1) = half*(x(i) + x(i+1))
 #endif
 #if GEOM == SPHERICAL
-              radius(3,1,1) = half*(x(i) + x(i-1))*sin(yc)
-              radius(3,2,1) = half*(x(i) + x(i+1))*sin(yc)
-              radius(3,1,2) = x(i)*sin(half*(y(j) + y(j-1)))
-              radius(3,2,2) = x(i)*sin(half*(y(j) + y(j+1)))
-              radius(3,1,3) = x(i)*sin(yc)
-              radius(3,2,3) = x(i)*sin(yc)
+           radius(3,1,1) = half*(x(i) + x(i-1))*sin(yc)
+           radius(3,2,1) = half*(x(i) + x(i+1))*sin(yc)
+           radius(3,1,2) = x(i)*sin(half*(y(j) + y(j-1)))
+           radius(3,2,2) = x(i)*sin(half*(y(j) + y(j+1)))
+           radius(3,1,3) = x(i)*sin(yc)
+           radius(3,2,3) = x(i)*sin(yc)
 #endif
+#if GEOM == CARTESIAN
+           if (Omega0 > zero) then
+              ! Source term in case of shearing box
+              dsx = two*Omega0*dt*uin(i,j,k,iv)/(one + lambda)
+              dsy = -half*Omega0*dt*uin(i,j,k,iu)/(one + lambda)
+              
+              uin(i,j,k,iu) = uin(i,j,k,iu)*ratio + dsx 
+              uin(i,j,k,iv) = uin(i,j,k,iv)*ratio + dsy 
+           endif
+#endif
+           
+#if NDIM != 2
+           !$acc loop independent private(i0, j0, k0)
+#endif
+           do idim = 1, ndim
+              i0 = 0; j0 = 0; k0 = 0
+              if (idim == 1) i0 = 1
+              if (idim == 2) j0 = 1
+              if (idim == 3) k0 = 1
+              uin(i,j,k,ir) = uin(i,j,k,ir) + (flux(i,j,k,ir,idim) &
+                   & - flux(i+i0,j+j0,k+k0,ir,idim))*dvloc
+              uin(i,j,k,iw) = uin(i,j,k,iw) &
+                   & + (flux(i,j,k,iw,idim)*radius(iw-1,1,idim) &
+                   & - flux(i+i0,j+j0,k+k0,iw,idim)*radius(iw-1,2,idim)) &
+                   & *dvloc/radius(iw-1,2,3)
+              uin(i,j,k,ip) = uin(i,j,k,ip) + (flux(i,j,k,ip,idim) &
+                   & - flux(i+i0,j+j0,k+k0,ip,idim))*dvloc
+              
+              if (ndim == 1) then
+                 uin(i,j,k,iA:iC) = uin(i,j,k,iA:iC) &
+                      & + (flux(i,j,k,iA:iC,idim) &
+                      & - flux(i+i0,j+j0,k+k0,iA:iC,idim))*dvloc
+              else if (ndim == 2) then
+                 uin(i,j,k,iC) = uin(i,j,k,iC) + (flux(i,j,k,iC,idim) &
+                      & - flux(i+i0,j+j0,k+k0,iC,idim))*dvloc
+              endif
+              
 #if GEOM == CARTESIAN
               if (Omega0 > zero) then
-                 ! Source term in case of shearing box
-                 dsx = two*Omega0*dt*uin(i,j,k,iv)/(one + lambda)
-                 dsy = -half*Omega0*dt*uin(i,j,k,iu)/(one + lambda)
-                 
-                 uin(i,j,k,iu) = uin(i,j,k,iu)*ratio + dsx 
-                 uin(i,j,k,iv) = uin(i,j,k,iv)*ratio + dsy 
-              endif
-#endif
-              
-              !$acc loop independent private(i0, j0, k0)
-              do idim = 1, ndim
-                 i0 = 0; j0 = 0; k0 = 0
-                 if (idim == 1) i0 = 1
-                 if (idim == 2) j0 = 1
-                 if (idim == 3) k0 = 1
-                 uin(i,j,k,ir) = uin(i,j,k,ir) + (flux(i,j,k,ir,idim) &
-                      & - flux(i+i0,j+j0,k+k0,ir,idim))*dvloc
-                 uin(i,j,k,iw) = uin(i,j,k,iw) &
-                      & + (flux(i,j,k,iw,idim)*radius(iw-1,1,idim) &
-                      & - flux(i+i0,j+j0,k+k0,iw,idim)*radius(iw-1,2,idim)) &
-                      & *dvloc/radius(iw-1,2,3)
-                 uin(i,j,k,ip) = uin(i,j,k,ip) + (flux(i,j,k,ip,idim) &
-                      & - flux(i+i0,j+j0,k+k0,ip,idim))*dvloc
-                 
-                 if (ndim == 1) then
-                    uin(i,j,k,iA:iC) = uin(i,j,k,iA:iC) &
-                         & + (flux(i,j,k,iA:iC,idim) &
-                         & - flux(i+i0,j+j0,k+k0,iA:iC,idim))*dvloc
-                 else if (ndim == 2) then
-                    uin(i,j,k,iC) = uin(i,j,k,iC) + (flux(i,j,k,iC,idim) &
-                         & - flux(i+i0,j+j0,k+k0,iC,idim))*dvloc
-                 endif
-                 
-#if GEOM == CARTESIAN
-                 if (Omega0 > zero) then
-                    dfn2 = (flux(i,j,k,iu,idim) - flux(i+i0,j+j0,k+k0,iu,idim)) &
-                         & *dvloc
-                    if (idim == 1) dfn2 = dfn2 + fgodunov_pre(i,j,k,1)*dvloc
-                    dfn3 = (flux(i,j,k,iv,idim) - flux(i+i0,j+j0,k+k0,iv,idim)) &
-                         & *dvloc
+                 dfn2 = (flux(i,j,k,iu,idim) - flux(i+i0,j+j0,k+k0,iu,idim)) &
+                      & *dvloc
+                 if (idim == 1) dfn2 = dfn2 + fgodunov_pre(i,j,k,1)*dvloc
+                 dfn3 = (flux(i,j,k,iv,idim) - flux(i+i0,j+j0,k+k0,iv,idim)) &
+                      & *dvloc
 #if NDIM > 1
-                    if (idim == 2) dfn3 = dfn3 + fgodunov_pre(i,j,k,2)*dvloc
+                 if (idim == 2) dfn3 = dfn3 + fgodunov_pre(i,j,k,2)*dvloc
 #endif
-                    
-                    uin(i,j,k,iu) = uin(i,j,k,iu) + dfn2/(one + lambda) &
-                         & + Omega0*dt/(one + lambda)*dfn3
-                    uin(i,j,k,iv) = uin(i,j,k,iv) + dfn3/(one + lambda) &
-                         & - 2.5d-1*Omega0*dt/(one + lambda)*dfn2
-                 else
+                 
+                 uin(i,j,k,iu) = uin(i,j,k,iu) + dfn2/(one + lambda) &
+                      & + Omega0*dt/(one + lambda)*dfn3
+                 uin(i,j,k,iv) = uin(i,j,k,iv) + dfn3/(one + lambda) &
+                      & - 2.5d-1*Omega0*dt/(one + lambda)*dfn2
+              else
 #endif
-                    uin(i,j,k,iu) = uin(i,j,k,iu) &
-                         & + (flux(i,j,k,iu,idim)*radius(iu-1,1,idim) &
-                         & - flux(i+i0,j+j0,k+k0,iu,idim)*radius(iu-1,2,idim)) &
-                         & *dvloc/radius(iu-1,2,3)
-                    uin(i,j,k,iv) = uin(i,j,k,iv)  &
-                         & + (flux(i,j,k,iv,idim)*radius(iv-1,1,idim) &
-                         & - flux(i+i0,j+j0,k+k0,iv,idim)*radius(iv-1,2,idim)) &
-                         & *dvloc/radius(iv-1,2,3)
-#if GEOM == CARTESIAN
-                 endif
-#endif
-              enddo
-              
-#if GEOM == CARTESIAN
-              if (Omega0 == zero) then
-#endif
-                 uin(i,j,k,iu) = uin(i,j,k,iu) + fgodunov_pre(i,j,k,1)*dvloc
-#if NDIM > 1
-                 uin(i,j,k,iv) = uin(i,j,k,iv) + fgodunov_pre(i,j,k,2)*dvloc
-#endif
+                 uin(i,j,k,iu) = uin(i,j,k,iu) &
+                      & + (flux(i,j,k,iu,idim)*radius(iu-1,1,idim) &
+                      & - flux(i+i0,j+j0,k+k0,iu,idim)*radius(iu-1,2,idim)) &
+                      & *dvloc/radius(iu-1,2,3)
+                 uin(i,j,k,iv) = uin(i,j,k,iv)  &
+                      & + (flux(i,j,k,iv,idim)*radius(iv-1,1,idim) &
+                      & - flux(i+i0,j+j0,k+k0,iv,idim)*radius(iv-1,2,idim)) &
+                      & *dvloc/radius(iv-1,2,3)
 #if GEOM == CARTESIAN
               endif
-#endif
-              
-#if NDIM > 2 
-              uin(i,j,k,iw) = uin(i,j,k,iw) + fgodunov_pre(i,j,k,3)*dvloc
 #endif
            enddo
-        enddo
-     enddo
-     !$OMP END PARALLEL DO
-  else
-#endif
-     !$acc kernels loop
-     !$OMP PARALLEL DO SCHEDULE(RUNTIME) PRIVATE(yc, radius, i0, j0, k0, dsx) &
-     !$OMP PRIVATE(dsy, dfn2, dfn3)
-     do k = 1, khi
-        !$acc loop vector(blocky_update)
-        do j = 1, jhi
-           yc = y(j)
-           !$acc loop private(radius) vector(blockx_update)
-           do i = 1, ihi
-              radius = one
-              dvloc  = one/dv(i,j,k)
-#if GEOM == CYLINDRICAL || GEOM == SPHERICAL
-              radius(2,1:2,1:3) = x(i)
-              radius(2,1,1) = half*(x(i) + x(i-1))
-              radius(2,2,1) = half*(x(i) + x(i+1))
-#endif
-#if GEOM == SPHERICAL
-              radius(3,1,1) = half*(x(i) + x(i-1))*sin(yc)
-              radius(3,2,1) = half*(x(i) + x(i+1))*sin(yc)
-              radius(3,1,2) = x(i)*sin(half*(y(j) + y(j-1)))
-              radius(3,2,2) = x(i)*sin(half*(y(j) + y(j+1)))
-              radius(3,1,3) = x(i)*sin(yc)
-              radius(3,2,3) = x(i)*sin(yc)
-#endif
+           
 #if GEOM == CARTESIAN
-              if (Omega0 > zero) then
-                 ! Source term in case of shearing box
-                 dsx = two*Omega0*dt*uin(i,j,k,iv)/(one + lambda)
-                 dsy = -half*Omega0*dt*uin(i,j,k,iu)/(one + lambda)
-                 
-                 uin(i,j,k,iu) = uin(i,j,k,iu)*ratio + dsx 
-                 uin(i,j,k,iv) = uin(i,j,k,iv)*ratio + dsy 
-              endif
+           if (Omega0 == 0) then
 #endif
-              
-              !$acc loop independent private(i0, j0, k0)
-              do idim = 1, ndim
-                 i0 = 0; j0 = 0; k0 = 0
-                 if (idim == 1) i0 = 1
-                 if (idim == 2) j0 = 1
-                 if (idim == 3) k0 = 1
-                 uin(i,j,k,ir) = uin(i,j,k,ir) + (flux(i,j,k,ir,idim) &
-                      & - flux(i+i0,j+j0,k+k0,ir,idim))*dvloc
-                 uin(i,j,k,iw) = uin(i,j,k,iw) &
-                      & + (flux(i,j,k,iw,idim)*radius(iw-1,1,idim) &
-                      & - flux(i+i0,j+j0,k+k0,iw,idim)*radius(iw-1,2,idim)) &
-                      & *dvloc/radius(iw-1,2,3)
-                 uin(i,j,k,ip) = uin(i,j,k,ip) + (flux(i,j,k,ip,idim) &
-                      & - flux(i+i0,j+j0,k+k0,ip,idim))*dvloc
-                 
-                 if (ndim == 1) then
-                    uin(i,j,k,iA:iC) = uin(i,j,k,iA:iC) &
-                         & + (flux(i,j,k,iA:iC,idim) &
-                         & - flux(i+i0,j+j0,k+k0,iA:iC,idim))*dvloc
-                 else if (ndim == 2) then
-                    uin(i,j,k,iC) = uin(i,j,k,iC) + (flux(i,j,k,iC,idim) &
-                         & - flux(i+i0,j+j0,k+k0,iC,idim))*dvloc
-                 endif
-                 
-#if GEOM == CARTESIAN
-                 if (Omega0 > zero) then
-                    dfn2 = (flux(i,j,k,iu,idim) - flux(i+i0,j+j0,k+k0,iu,idim)) &
-                         & *dvloc
-                    if (idim == 1) dfn2 = dfn2 + fgodunov_pre(i,j,k,1)*dvloc
-                    dfn3 = (flux(i,j,k,iv,idim) - flux(i+i0,j+j0,k+k0,iv,idim)) &
-                         & *dvloc
+              uin(i,j,k,iu) = uin(i,j,k,iu) + fgodunov_pre(i,j,k,1)*dvloc
 #if NDIM > 1
-                    if (idim == 2) dfn3 = dfn3 + fgodunov_pre(i,j,k,2)*dvloc
-#endif
-                    
-                    uin(i,j,k,iu) = uin(i,j,k,iu) + dfn2/(one + lambda) &
-                         & + Omega0*dt/(one + lambda)*dfn3
-                    uin(i,j,k,iv) = uin(i,j,k,iv) + dfn3/(one + lambda) &
-                         & - 2.5d-1*Omega0*dt/(one + lambda)*dfn2
-                 else
-#endif
-                    uin(i,j,k,iu) = uin(i,j,k,iu) &
-                         & + (flux(i,j,k,iu,idim)*radius(iu-1,1,idim) &
-                         & - flux(i+i0,j+j0,k+k0,iu,idim)*radius(iu-1,2,idim)) &
-                         & *dvloc/radius(iu-1,2,3)
-                    uin(i,j,k,iv) = uin(i,j,k,iv)  &
-                         & + (flux(i,j,k,iv,idim)*radius(iv-1,1,idim) &
-                         & - flux(i+i0,j+j0,k+k0,iv,idim)*radius(iv-1,2,idim)) &
-                         & *dvloc/radius(iv-1,2,3)
-#if GEOM == CARTESIAN
-                 endif
-#endif
-              enddo
-              
-#if GEOM == CARTESIAN
-              if (Omega0 == 0) then
-#endif
-                 uin(i,j,k,iu) = uin(i,j,k,iu) + fgodunov_pre(i,j,k,1)*dvloc
-#if NDIM > 1
-                 uin(i,j,k,iv) = uin(i,j,k,iv) + fgodunov_pre(i,j,k,2)*dvloc
+              uin(i,j,k,iv) = uin(i,j,k,iv) + fgodunov_pre(i,j,k,2)*dvloc
 #endif
 #if GEOM == CARTESIAN
-              endif
+           endif
 #endif
-
-              
+           
 #if NDIM > 2 
-              uin(i,j,k,iw) = uin(i,j,k,iw) + fgodunov_pre(i,j,k,3)*dvloc
+           uin(i,j,k,iw) = uin(i,j,k,iw) + fgodunov_pre(i,j,k,3)*dvloc
 #endif
-           enddo
         enddo
      enddo
-     !$OMP END PARALLEL DO
-#if OACC == 1
-  endif
-#endif
+  enddo
+  !$OMP END PARALLEL DO
 
   if (ndim_act > 1) then
      call constrained_transport

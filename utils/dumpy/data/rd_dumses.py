@@ -12,7 +12,7 @@
 # <http://www.gnu.org/licenses/>
 # \date
 # \b created:          04-15-2013 
-# \b last \b modified: 05-29-2015
+# \b last \b modified: 06-25-2015
 
 #===============================================================================
 import sys
@@ -436,7 +436,7 @@ class MetadataHDF5Reader(MetadataReader):
     def load(self, idump=1, dir_='./', mype=0, ext='h5'):
         filename = MetadataReader.load(self, idump, dir_, mype, ext)
 
-        f = h5.File(filename)
+        f = h5.File(filename, 'r')
         meta_int  = f['meta_int'][:]
         meta_real = f['meta_real'][:]
         f.close()
@@ -453,7 +453,7 @@ class MetadataNetCDFReader(MetadataReader):
     def load(self, idump=1, dir_='./', mype=0, ext='nc'):
         filename = MetadataReader.load(self, idump, dir_, mype, ext)
 
-        f = nc.Dataset(filename)
+        f = nc.Dataset(filename, 'r')
         meta_int  = f.variables['meta_int'][:]
         meta_real = f.variables['meta_real'][:]
         f.close()
@@ -514,7 +514,7 @@ class MetadataOldNetCDFReader(MetadataReader):
     def load(self, idump=1, dir_='./', mype=0, ext=''):
         filename = MetadataReader.load(self, idump, dir_, mype, ext)
 
-        f = nc.Dataset(filename)
+        f = nc.Dataset(filename, 'r')
         meta_int  = f.variables['para_int'][:]
         meta_real = f.variables['para_real'][:]
         box_size  = f.variables['boxSize'][:]
@@ -672,7 +672,7 @@ class DataHDF5Reader(DataSequentialReader):
     def _load(self, idump=1, dir_='./', nghost=3, mype=0, ndim=None, ext='h5'):
         filename = self._getFile(idump, dir_, mype, ext)
 
-        f = h5.File(filename)
+        f = h5.File(filename, 'r')
         rho = f['rho'][:].transpose(); E  = f['E'][:].transpose()
         vx  = f['vx'][:].transpose();  Bx = f['Bx'][:].transpose()
         vy  = f['vy'][:].transpose();  By = f['By'][:].transpose()
@@ -748,7 +748,7 @@ class DataOldHDF5Reader(DataSequentialReader):
         if(self.nz != 1 or ndim > 1): nztot = self.nz + 2*nghost
         shape = (nvar, nztot, nytot, nxtot)
 
-        f = h5.File(filename)
+        f = h5.File(filename, 'r')
         # x, y, z have to be retrieve from the file
         x = f['x'][:]; y = f['y'][:]; z = f['z'][:]
         uin = f['uin'][:]
@@ -872,7 +872,7 @@ class DataNetCDFReader(DataParallelReader):
                   , mype=0, ext='nc'):
         filename = self._getFile(idump, dir_, mype, ext)
         
-        f = nc.Dataset(filename)
+        f = nc.Dataset(filename, 'r')
         rho = f.variables['rho'][k0:k1,j0:j1,i0:i1].transpose()
         vx  = f.variables['vx'][k0:k1,j0:j1,i0:i1].transpose()
         vy  = f.variables['vy'][k0:k1,j0:j1,i0:i1].transpose()
@@ -943,7 +943,7 @@ class DataOldNetCDFReader(DataParallelReader):
     ## _inline method to check the contiguity of data
     def _inline(self, idump=1, dir_='./', mype=0, nghost=3):
         filename = self._getFile(idump, dir_, mype, ext='')
-        f    = nc.Dataset(filename)
+        f    = nc.Dataset(filename, 'r')
         rho  = f.variables['rho']
         zdim = rho.shape[0]
         f.close()
@@ -956,7 +956,7 @@ class DataOldNetCDFReader(DataParallelReader):
                   , mype=0, ext=''):
         filename = self._getFile(idump, dir_, mype, ext)
         
-        f = nc.Dataset(filename)
+        f = nc.Dataset(filename, 'r')
         rho = f.variables['rho'][k0:k1,j0:j1,i0:i1].transpose()
         vx  = f.variables['rho_vx'][k0:k1,j0:j1,i0:i1].transpose()
         vy  = f.variables['rho_vy'][k0:k1,j0:j1,i0:i1].transpose()
