@@ -13,7 +13,7 @@
 # <http://www.gnu.org/licenses/>
 # date:
 # created:       12-15-2014
-# last modified: 04-20-2015
+# last modified: 06-25-2015
 #===============================================================================
 import os, sys, re, shutil
 sys.path.append('utils/pyutils/')
@@ -34,6 +34,10 @@ def editMakefile(fname='Makefile'):
     shutil.move(tname, fname)
 
 def main():
+    try:
+        os.makedirs('./bin')
+    except OSError:
+        pass
     tree = FileTree('./src')
     tree.processAllFiles()
     editMakefile()
