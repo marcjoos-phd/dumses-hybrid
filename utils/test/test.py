@@ -13,7 +13,7 @@
 # <http://www.gnu.org/licenses/>
 # \date
 # \b created:          12-20-2013 
-# \b last \b modified: 05-21-2015
+# \b last \b modified: 06-26-2015
 
 #===============================================================================
 import os
@@ -1061,6 +1061,11 @@ def main():
             sys.exit(2)
         dumsesRoot = currentDir + '/../../'
     
+    try:
+        os.makedirs('./tmp')
+    except OSError:
+        pass
+
     if mpi and fcc == 'gfortran':
         fcc = ''
 
