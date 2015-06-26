@@ -1062,7 +1062,7 @@ def main():
         dumsesRoot = currentDir + '/../../'
     
     try:
-        os.makedirs('./tmp')
+        os.makedirs(currentDir + './tmp')
     except OSError:
         pass
 
