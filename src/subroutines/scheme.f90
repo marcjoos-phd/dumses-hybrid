@@ -18,7 +18,7 @@
 !! <http://www.gnu.org/licenses/>
 !! \date
 !! \b created:          04-15-2013 
-!! \b last \b modified: 06-25-2015
+!! \b last \b modified: 06-30-2015
 !<
 !===============================================================================
 !> Compute primitive variables
@@ -993,7 +993,7 @@ subroutine trace2d(bfc, dq, dbfc, qm, qp, qRT, qRB, qLT, qLB)
            sAL0 = (ELR - ELL)/xL*half*dtdy
            sAR0 = (ERR - ERL)/xR*half*dtdy
            sBL0 = (ELL - ERL)*half*dtdx
-           sBR0 = (ERR - ELR)*half*dtdx
+           sBR0 = (ELR - ERR)*half*dtdx
 #endif
 
 #if GEOM == SPHERICAL 
