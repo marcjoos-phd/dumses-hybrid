@@ -48,12 +48,12 @@ module debugtools
       character(LEN=80) :: openedfile
       real(dp), dimension(nxarr,nyarr,nzarr) :: array
       logical           :: fexists
+      integer           :: ierr
       
       integer, parameter :: nb_int=6
       integer, dimension(nb_int) :: meta_int
 
 #if HDF5 == 1 || PHDF5 == 1
-      integer        :: ierr
       integer(hid_t) :: file_id, fapl_id
 #endif
 

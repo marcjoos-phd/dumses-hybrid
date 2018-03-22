@@ -51,7 +51,7 @@ endif
 LIBFLAGS = $(MPIINC) $(HDFINC) $(CDFINC) -I$(BINDIR)
 FLAGS    = $(FFLAGS) $(PHYFLAGS)
 ALLFLAGS = $(LIBFLAGS) $(CPPFLAGS) $(FLAGS)
-ALLLIBS  = $(MPILIB) $(HDFLIB) $(CDFLIB)
+ALLLIBS  = $(HDFLIB) $(CDFLIB) $(MPILIB)
 BINOBJ   = $(addprefix $(BINDIR)/, $(sort $(notdir $(ALLOBJ))))
 
 # Set the right flag for geometry
