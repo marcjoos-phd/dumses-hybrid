@@ -199,7 +199,7 @@ def defFCompiler(FCompiler=None, mpi=0, mpidir="", openacc=0, debug=0, auto=0):
                     if debug:
                         fflags    = "-fopenmp -O0 -Wall -fcheck=all -fbacktrace -g -ffree-line-length-0"
                 elif(FCompiler == "ifort"):
-                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -fast -mkl"
+                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -mkl"
                     cppflags = "-fpp"
                     modflags = "-module $(BINDIR)"
                     knownFC  = 1
@@ -228,7 +228,7 @@ def defFCompiler(FCompiler=None, mpi=0, mpidir="", openacc=0, debug=0, auto=0):
                     if debug:
                         fflags    = "-fopenmp -O0 -Wall -fcheck=all -fbacktrace -g -ffree-line-length-0"
                 elif(FCompiler == "ifort"):
-                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -fast -mkl"
+                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -mkl"
                     cppflags = "-fpp"
                     modflags = "-module $(BINDIR)"
                     knownFC  = 1
@@ -254,7 +254,7 @@ def defFCompiler(FCompiler=None, mpi=0, mpidir="", openacc=0, debug=0, auto=0):
                     if debug:
                         fflags    = "-fopenmp -O0 -Wall -fcheck=all -fbacktrace -g -ffree-line-length-0"
                 elif(FCompiler == "ifort"):
-                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -fast -mkl"
+                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -mkl"
                     cppflags = "-fpp"
                     modflags = "-module $(BINDIR)"
                     knownFC  = 1
