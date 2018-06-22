@@ -1,1 +1,1 @@
-from snapshots import plot1d, plot2d
+from .snapshots import plot1d, plot2d

@@ -1,1 +1,1 @@
-from mri import compAlpha
+from .mri import compAlpha

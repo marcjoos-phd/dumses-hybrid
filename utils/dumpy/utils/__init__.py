@@ -1,1 +1,1 @@
-from debug import comp, compHistory
+from .debug import comp, compHistory
