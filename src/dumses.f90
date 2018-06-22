@@ -79,6 +79,7 @@ program dumses
   do
      if (inter) then
         call cpu_time(tcpu0)
+        call system_clock(count=ti0, count_rate=rate)
      endif
   
      !$py start_timing Timestep
@@ -113,7 +114,10 @@ program dumses
         if (mype == 0) then
            call cpu_time(tcpu1)
            cputime = tcpu1 - tcpu0
-           print '("CPU time required (per timestep): ", 1PE12.6E2)', cputime
+           call system_clock(count=ti1, count_rate=rate)
+           elptime = real(ti1 - ti0, kind=8)/real(rate, kind=8)
+           print '("CPU time, Elapsed time, cell update: ", 1PE12.6E2, " s, ", 1PE12.6E2, " s, ", 1PE12.6E2, " cells/s")', &
+                cputime, elptime, (nxglob*nyglob*nzglob)/elptime
         endif
      endif
   

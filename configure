@@ -13,7 +13,7 @@
 # <http://www.gnu.org/licenses/>
 # date:
 # created:       01-10-2013
-# last modified: 05-29-2015
+# last modified: 06-22-2018
 #===============================================================================
 import os, sys, glob
 from datetime import datetime
@@ -199,7 +199,16 @@ def defFCompiler(FCompiler=None, mpi=0, mpidir="", openacc=0, debug=0, auto=0):
                     if debug:
                         fflags    = "-fopenmp -O0 -Wall -fcheck=all -fbacktrace -g -ffree-line-length-0"
                 elif(FCompiler == "ifort"):
-                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -mkl"
+                    stiv, iversion = cmd("ifort --version | head -n1 | awk '{print $NF}'")
+                    try:
+                        assert(not stiv)
+                    except AssertionError:
+                        print("Please check your Intel compiler installation")
+                    iversion = int(iversion)
+                    if (iversion < 20160000):
+                        fflags   = ("-parallel" if auto else "-openmp") + " -O3 -mkl"
+                    else:
+                        fflags   = ("-parallel" if auto else "-qopenmp") + " -O3 -mkl"
                     cppflags = "-fpp"
                     modflags = "-module $(BINDIR)"
                     knownFC  = 1
@@ -228,7 +237,16 @@ def defFCompiler(FCompiler=None, mpi=0, mpidir="", openacc=0, debug=0, auto=0):
                     if debug:
                         fflags    = "-fopenmp -O0 -Wall -fcheck=all -fbacktrace -g -ffree-line-length-0"
                 elif(FCompiler == "ifort"):
-                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -mkl"
+                    stiv, iversion = cmd("ifort --version | head -n1 | awk '{print $NF}'")
+                    try:
+                        assert(not stiv)
+                    except AssertionError:
+                        print("Please check your Intel compiler installation")
+                    iversion = int(iversion)
+                    if (iversion < 20160000):
+                        fflags   = ("-parallel" if auto else "-openmp") + " -O3 -mkl"
+                    else:
+                        fflags   = ("-parallel" if auto else "-qopenmp") + " -O3 -mkl"
                     cppflags = "-fpp"
                     modflags = "-module $(BINDIR)"
                     knownFC  = 1
@@ -254,7 +272,16 @@ def defFCompiler(FCompiler=None, mpi=0, mpidir="", openacc=0, debug=0, auto=0):
                     if debug:
                         fflags    = "-fopenmp -O0 -Wall -fcheck=all -fbacktrace -g -ffree-line-length-0"
                 elif(FCompiler == "ifort"):
-                    fflags   = ("-parallel" if auto else "-openmp") + " -O3 -mkl"
+                    stiv, iversion = cmd("ifort --version | head -n1 | awk '{print $NF}'")
+                    try:
+                        assert(not stiv)
+                    except AssertionError:
+                        print("Please check your Intel compiler installation")
+                    iversion = int(iversion)
+                    if (iversion < 20160000):
+                        fflags   = ("-parallel" if auto else "-openmp") + " -O3 -mkl"
+                    else:
+                        fflags   = ("-parallel" if auto else "-qopenmp") + " -O3 -mkl"
                     cppflags = "-fpp"
                     modflags = "-module $(BINDIR)"
                     knownFC  = 1

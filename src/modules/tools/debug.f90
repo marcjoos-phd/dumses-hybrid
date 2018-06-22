@@ -40,7 +40,9 @@ module debugtools
     subroutine write_debug_file(ndump, filename, varname, array &
          , nxarr, nyarr, nzarr)
       use params
+#if MPI == 1
       use mpi_var
+#endif
       implicit none
 
       integer           :: ndump, nxarr, nyarr, nzarr
@@ -57,7 +59,7 @@ module debugtools
       integer(hid_t) :: file_id, fapl_id
 #endif
 
-#if PNCDF == 1
+#if PNCDF == 1 & MPI == 1
       integer :: nout, ncid, niid, piid, xdimid, ydimid, zdimid, varid
       integer, dimension(3) :: sdimid
       integer :: dimz
