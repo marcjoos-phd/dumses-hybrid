@@ -84,9 +84,9 @@ class DumsesDebug:
             f.close()
         elif io_type == 'pnetcdf':
             self.filename = self.dir + filedebug + ".000000.nc"
-
+        
             f = nc.Dataset(self.filename)
-
+        
             meta_int = f.variables['meta_int'][:]
             nx = meta_int[0]; nxslice = meta_int[3]
             ny = meta_int[1]; nyslice = meta_int[4]
@@ -101,7 +101,7 @@ class DumsesDebug:
             self.nx = nx; self.nxslice = nxslice
             self.ny = ny; self.nyslice = nyslice
             self.nz = nz; self.nzslice = nzslice
-
+        
             tempdict = {}
             for dset in f.variables.iterkeys():
                 if dset.name != "meta_int":

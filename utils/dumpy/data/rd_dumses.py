@@ -20,7 +20,7 @@ import glob
 import numpy as np
 import h5py  as h5
 import netCDF4 as nc
-from formatChecker import formatChecker
+from .formatChecker import formatChecker
 
 ## DUMSES data class factory
 class DumsesDataFactory(object):
@@ -586,8 +586,8 @@ class DataSequentialReader(DataReader):
             data = self._load(idump, dir_, nghost, mype, ndim)
 
             xpos = mype%self.nxslice
-            ypos = mype/(self.nxslice*self.nzslice)%self.nyslice
-            zpos = mype/(self.nxslice)%self.nzslice
+            ypos = int(mype/(self.nxslice*self.nzslice)%self.nyslice)
+            zpos = int(mype/(self.nxslice)%self.nzslice)
 
             i0 = xpos*self.nx; i1 = (xpos + 1)*self.nx
             j0 = ypos*self.ny; j1 = (ypos + 1)*self.ny
@@ -597,7 +597,7 @@ class DataSequentialReader(DataReader):
             if(self.nx != 1 or ndim > 1): a0 = nghost; a1 = nghost + self.nx
             if(self.ny != 1 or ndim > 1): b0 = nghost; b1 = nghost + self.ny
             if(self.nz != 1 or ndim > 1): c0 = nghost; c1 = nghost + self.nz
-
+            
             self.rho[i0:i1,j0:j1,k0:k1]    = data['rho'][a0:a1,b0:b1,c0:c1]
             self.E[i0:i1,j0:j1,k0:k1]      = data['E'][a0:a1,b0:b1,c0:c1]
             self.rhou[i0:i1,j0:j1,k0:k1,0] = data['rhou'][a0:a1,b0:b1,c0:c1,0]

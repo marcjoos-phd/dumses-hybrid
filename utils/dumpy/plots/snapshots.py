@@ -354,7 +354,7 @@ def plot2d(data, var='rho', xpos=None, ypos=None, zpos=0 \
             if xmin: xmin = findPosition(xmin, data.x)
             if xmax: xmax = findPosition(xmax, data.x)
         if not xmin: xmin = 0
-        if not xmax: xmax = dictDat[dictDat.keys()[0]].shape[0]
+        if not xmax: xmax = dictDat[list(dictDat.keys())[0]].shape[0]
     else:
         if physUnit:
             xmin = findPosition(xpos, data.x)
@@ -367,7 +367,7 @@ def plot2d(data, var='rho', xpos=None, ypos=None, zpos=0 \
             if ymin: ymin = findPosition(ymin, data.y)
             if ymax: ymax = findPosition(ymax, data.y)
         if not ymin: ymin = 0
-        if not ymax: ymax = dictDat[dictDat.keys()[0]].shape[1]
+        if not ymax: ymax = dictDat[list(dictDat.keys())[0]].shape[1]
     else:
         if physUnit:
             ymin = findPosition(ypos, data.y)
@@ -380,7 +380,7 @@ def plot2d(data, var='rho', xpos=None, ypos=None, zpos=0 \
             if zmin: zmin = findPosition(zmin, data.z)
             if zmax: zmax = findPosition(zmax, data.z)
         if not zmin: zmin = 0
-        if not zmax: zmax = dictDat[dictDat.keys()[0]].shape[2]
+        if not zmax: zmax = dictDat[list(dictDat.keys())[0]].shape[2]
     else:
         if physUnit:
             zmin = findPosition(zpos, data.z)
