@@ -151,7 +151,7 @@ contains
     endif
 #else
     call H5Screate_simple_f(rank, dims, h5_dspace, ierr)
-    call H5Dopen_f(loc_id, trim(dsetname), H5T_NATIVE_DOUBLE, h5_dset, ierr)
+    call H5Dopen_f(loc_id, trim(dsetname), h5_dset, ierr)
     call H5Dread_f(h5_dset, H5T_NATIVE_DOUBLE, array, dims, ierr)
     call H5Dclose_f(h5_dset, ierr)
     call H5Sclose_f(h5_dspace, ierr)
