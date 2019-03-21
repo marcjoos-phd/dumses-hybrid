@@ -233,7 +233,7 @@ class File:
                         mindist = min(mindist, dist)
                 addLine = addLineOrig[distance.index(mindist)]
                 # Find current subroutine
-                for j in xrange(len(subListOrig[0])):
+                for j in range(len(subListOrig[0])):
                     if addLine > subListOrig[0][j] and \
                             addLine < subListOrig[1][j]:
                         beginSub = subListNew[0][j]
@@ -242,21 +242,21 @@ class File:
                         break
                 # Find current use statements, to check if 'params' is defined
                 listUse = [[],[],[]]
-                for j in xrange(len(useList[0])):
+                for j in range(len(useList[0])):
                     if useList[0][j] > beginSub and useList[0][j] < endSub:
                         listUse[0].append(useList[0][j])
                         listUse[1].append(useList[1][j])
                         listUse[2].append(useList[2][j])
                 # Find current declarations, to see if 'verbose' is defined
                 listDec = [[],[]]
-                for j in xrange(len(decList[0])):
+                for j in range(len(decList[0])):
                     if decList[0][j] > beginSub and decList[0][j] < endSub:
                         listDec[0].append(decList[0][j])
                         listDec[1].append(decList[1][j])
                 # Find 'implicit none' statement, to determine where to include
                 # the use statement
                 implicitPos = []
-                for j in xrange(len(impList)):
+                for j in range(len(impList)):
                     if impList[j] > beginSub and impList[j] < endSub:
                         implicitPos.append(impList[j])
                         break
@@ -480,7 +480,7 @@ class File:
             print("Template solvers are badly defined.")
             sys.exit(0)
 
-        for i in xrange(0,len(solverTemplate),2):
+        for i in range(0,len(solverTemplate),2):
             try:
                 assert(solverTemplate[i][-1].split()[-1] == solverTemplate[i+1][-1].split()[-1])
             except AssertionError:
@@ -495,11 +495,11 @@ class File:
             print("Generic template solver is badly defined: the number of 'insert_solver' instructions does not fit the number of generic template.")
             sys.exit(0)
 
-        for i in xrange(0,len(solverGenericTemplate),2):
+        for i in range(0,len(solverGenericTemplate),2):
             begin = solverGenericTemplate[i][0]
             end   = solverGenericTemplate[i+1][0]
             try:
-                assert(begin < insertSolver[i/2] & insertSolver[i/2] < end)
+                assert(begin < insertSolver[int(i/2)] & insertSolver[int(i/2)] < end)
             except AssertionError:
                 print("In file: %s" %fname)
                 print("Generic template solver is badly defined: it does not contain an 'insert_solver' instruction.")
@@ -541,7 +541,7 @@ class File:
                 lastPragma = gsOMPPragma[0][i]
         privatePos = gsOMPPragma[0][i]
 
-        for i in xrange(0,len(solverTemplate),2):
+        for i in range(0,len(solverTemplate),2):
             # Retrieve solver structure
             beginSolver   = solverTemplate[i][0] + 1
             endSolver     = solverTemplate[i+1][0] - 1
@@ -564,7 +564,7 @@ class File:
             newSolver[gsSubroutine[1][0]] = newSolver[gsSubroutine[1][0]].replace(labelGeneric, labelFull)
 
             # Check if new 'use' statement is needed
-            for i in xrange(len(sUsestatement[0])):
+            for i in range(len(sUsestatement[0])):
                 line     = sUsestatement[0][i] 
                 module   = sUsestatement[1][i]
                 variable = sUsestatement[2][i]
@@ -589,7 +589,7 @@ class File:
                 blankSpace = len(blank.match(newSolver[privatePos]).group(1))
                 blankSpace = " "*blankSpace
                 npvar = len(privateVar)
-                nvarBatch = npvar/10
+                nvarBatch = int(npvar/10)
                 nvarRemains = npvar%10
                 i = 0
                 newSolver[privatePos] = '! Automatically modified by preprocessor >\n' + newSolver[privatePos]
@@ -598,7 +598,7 @@ class File:
                     newSolver[privatePos] += blankSpace + "!$OMP PRIVATE(" \
                         + ",".join(privateVar[i*10:(i+1)*10]) + ")\n"
                     i += 1
-                if nvarRemains: 
+                if nvarRemains:
                     newSolver[privatePos] = newSolver[privatePos][:-1] \
                        + " &\n" + blankSpace \
                        + "!$OMP PRIVATE(" + ",".join(privateVar[i*10:]) + ")\n"
@@ -757,7 +757,7 @@ class FileTree:
         self._listIgnore = []
         dot = re.compile(r'\.[^\/]')
         for root, dirs, files in os.walk(self.dir):
-            isdot = [dot.match(root.split('/')[-n]) for n in xrange(len(root.split('/')))]
+            isdot = [dot.match(root.split('/')[-n]) for n in range(len(root.split('/')))]
             if not any(isdot):
                 self._listFiles(root, files)
         self._cleanFiles()

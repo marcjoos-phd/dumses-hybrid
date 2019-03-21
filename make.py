@@ -42,7 +42,7 @@ def main():
     tree.processAllFiles()
     editMakefile()
     st, out = cmd('make')
-    print out
+    print(out)
     
 if __name__ == "__main__":
     main()
