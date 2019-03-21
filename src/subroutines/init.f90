@@ -518,7 +518,7 @@ subroutine init_grid
   do k = klo,khi
      do j = jlo,jhi
         do i = ilo,ihi
-           dv(i,j,k) = dx*x(i)*dy**x(i)*sin(y(j))*dz
+           dv(i,j,k) = dx*x(i)*dy*x(i)*sin(y(j))*dz
            do idim = 1,ndim
               if (idim == 1) ds(i,j,k,idim) = half*(x(i) + x(i-1))*dy*dz
               if (idim == 2) ds(i,j,k,idim) = half*(x(i) + x(i-1))*dx*dz
