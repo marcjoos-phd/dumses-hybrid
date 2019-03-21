@@ -47,9 +47,9 @@ def compConf(fname='conf.log', mpi='', hdf='/', cdf='/', fcc='gfortran' \
                 larg = ['with-mpi', 'with-phdf5', 'with-pnetcdf' \
                 , 'with-fortran-compiler', 'with-openacc', 'problem' \
                 , 'ndim', 'isothermal']
-                linp = ['' for i in xrange(len(larg))]
+                linp = ['' for i in range(len(larg))]
                 linp[larg.index('with-openacc')] = 0
-                for i in xrange(len(args)):
+                for i in range(len(args)):
                     if args[i] != "with-openacc":
                         targ, tinp = args[i].split('=')
                     else:
@@ -546,7 +546,7 @@ def plotResult(dumsesRoot, idump=10, ndim=1, fdir='./tmp/', io_type='binary' \
         lname    = pro.split()
         namefile = lname[0]
         if len(lname) > 1:
-            namefile = [namefile + '_' + lname[i] for i in xrange(1, len(lname))][0]
+            namefile = [namefile + '_' + lname[i] for i in range(1, len(lname))][0]
         if ndim == 1 or ndim == 2:
             if diff:
                 namefile = namefile + '_Err_' + direction + '_%02d' %idump
@@ -575,7 +575,7 @@ def plotAll(dumsesRoot, ndim=1, fdir='./tmp/', io_type='binary', pro="" \
            , vmind=vmind, vmaxd=vmaxd, vminE=vminE, vmaxE=vmaxE \
            , vminv=vminv, vmaxv=vmaxv, vminB=vminB, vmaxB=vmaxB)
     else:
-        for i in xrange(lastnum+1):
+        for i in range(lastnum+1):
             plotResult(dumsesRoot, idump=i, ndim=ndim, fdir=fdir \
                 , io_type=io_type, pro=pro, save=save, datdim=datdim \
                 , direction=direction, form=form \

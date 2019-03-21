@@ -475,7 +475,7 @@ class MetadataOldHDF5Reader(MetadataReader):
         tmp = getArray(f, 3, 'i4')
         meta_int = getArray(f, 3, 'i4')
         meta_int = np.append(meta_int, getArray(f, 3, 'i4'))
-        meta_real = np.append(meta_real, [None for i in xrange(8)])
+        meta_real = np.append(meta_real, [None for i in range(8)])
         f.close()
 
         self.read(meta_int, meta_real)

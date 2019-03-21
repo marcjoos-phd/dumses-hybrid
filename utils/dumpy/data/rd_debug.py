@@ -112,9 +112,9 @@ class DumsesDebug:
         else:
             raise NotImplementedError
                     
-        selx = [i + nghost for i in xrange(nx)]
-        sely = [i + nghost for i in xrange(ny)] if ny != 1 else [0]
-        selz = [i + nghost for i in xrange(nz)] if nz != 1 else [0]
+        selx = [i + nghost for i in range(nx)]
+        sely = [i + nghost for i in range(ny)] if ny != 1 else [0]
+        selz = [i + nghost for i in range(nz)] if nz != 1 else [0]
 
         nxs = nx + 2*nghost
         nys = ny + 2*nghost if ny != 1 else ny
@@ -125,7 +125,7 @@ class DumsesDebug:
                 , (nproc, nzs, nys, nxs))
             tempdict[dset] = np.transpose(tempdict[dset], (0, 3, 2, 1))
 
-        for n in xrange(nproc):
+        for n in range(nproc):
             xpos = n%nxslice
             ypos = n/(nxslice*nzslice)%nyslice
             zpos = (n/nxslice)%nzslice
@@ -156,7 +156,7 @@ class DumsesDebug:
         if not var:
             pl.figure(figsize=(self.nvar*4,4))
             pl.subplots_adjust(bottom=0.15)
-            for i in xrange(self.nvar):
+            for i in range(self.nvar):
                 ivar = self.dict.keys()[i]
                 if len(ivar) == 2:
                     title = ivar[0] + "$_" + ivar[1] + "$"

@@ -164,7 +164,7 @@ class GPUTest(object):
         except AssertionError:
             print("n must be strictly larger than 1")
             sys.exit(2)
-        x = [2**i for i in xrange(2,self.nxy+2)]
+        x = [2**i for i in range(2,self.nxy+2)]
         y = x
         couple = []
         for xitem in x:
@@ -350,7 +350,7 @@ def getBestConfig(results, verbose=True):
 
 def getBestFromAll(picklefile, fmrc=32, nmrc=8):
     """Get the best configuration across all the tests ran with different maxregcounts. 'fmrc' corresponds to the first value of maxregcount, and 'nmrc' to the number of different maxregcounts used (with strides of 32)."""
-    lm = [fmrc + i*32 for i in xrange(nmrc)]
+    lm = [fmrc + i*32 for i in range(nmrc)]
     if lm[-1] == 256: lm[-1] -= 1
     allDict = {}
     allBest = {}
@@ -374,7 +374,7 @@ def getBestFromAll(picklefile, fmrc=32, nmrc=8):
 def plotDiff(results, key, labels=None, *args, **kwargs):
     """Plot the elapsed time for a given subroutine (given by 'key') for all the given reduced results. 'results' is a list of reduced results dictionaries. optional 'labels' is a list of labels for the maxregcount of the given results."""
     if not labels:
-        labels = [None for i in xrange(len(results))]
+        labels = [None for i in range(len(results))]
     for i, res in enumerate(results):
         rres = revertTimeDict(res)
         rlabel = rres[key].keys()
