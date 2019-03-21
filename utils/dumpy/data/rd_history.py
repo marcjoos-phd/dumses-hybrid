@@ -87,7 +87,7 @@ class DumsesHistory:
         else:
             keys = keys.split()[1:]
         f.close()
-        for i in xrange(len(keys)):
+        for i in range(len(keys)):
             self.dict[keys[i]] = np.loadtxt(fname, usecols=(i,))
 
     ## listvar method to list the variables written in \c 'history.txt'
